@@ -16,6 +16,8 @@ state=q0
 letras =  (string.join(map(chr, range(97, 123)),'\',\'')) + '_'
 #Numeros
 numeros = xrange(0,9)
+#Error
+error=""
 	
 def q0(x):
 	if(x in letras):
@@ -47,27 +49,18 @@ def q0(x):
 	global state
 	state = entrada[char]
 	
-def q1(x):
-	global state
-    if(x=='}'):
-		state=q0
-	else:
-		global error
+def q1(x): 
+	if(x=='}'):
+		global state
+		state=q0 
+	else: 
+		global error 
 		error="Caracter no valido: "+x		
 
 def q2(x):
     x= x - 2
     print x
-    
 
-#Procesamos el archivo    
-with open(archivo) as f:
-    for line in f:
-		global tokens
-        tokens.add(process(line))    
-    
-#letras = string.ascii_lowercase
-#letras = string.join(map(chr, range(97, 123)),'\',\'') #or list(map(chr, range(ord('a'), ord('z')+1)))
 def process(line):
 	#estados = {
 	    #'q0': a,
@@ -112,8 +105,17 @@ def process(line):
     #x = x+1
 	#print estados
 
+ 
 
-print "Que hermoso switch que hice en Python"
+#Procesamos el archivo    
+with open(archivo) as f:
+    for line in f:
+		tokens.add(process(line))    
+    
+#letras = string.ascii_lowercase
+#letras = string.join(map(chr, range(97, 123)),'\',\'') #or list(map(chr, range(ord('a'), ord('z')+1)))
+
+#print "Que hermoso switch que hice en Python"
 
 
     
