@@ -18,6 +18,9 @@ letras =  (string.join(map(chr, range(97, 123)),'\',\'')) + '_'
 numeros = xrange(0,9)
 #Error
 error=""
+#String procesado
+string=""
+
 	
 def q0(x):
 	if(x in letras):
@@ -30,22 +33,24 @@ def q0(x):
 	entrada={
 		' ': q0,
 		'{': q1,
-	    'numero': q2,
-	    ']': q5,
-	    '[': q4,
-	    '<': q6,
-	    '>': q10,
-	    ';': q13,
-	    'letra': q14,
-	    '+': q16,
-	    '-': q17,
-	    '*': q18,
-	    '/': q19,
-	    '.': q20,
-	    '(': q21,
-	    ')': q22,
-	    ':': q23,
+	        'numero': q2,
+	        ']': q5,
+	        '[': q4,
+	        '<': q6,
+	        '>': q10,
+	        ';': q13,
+	        'letra': q14,
+	        '+': q16,
+	        '-': q17,
+	        '*': q18,
+	        '/': q19,
+	        '.': q20,
+	        '(': q21,
+	        ')': q22,
+	        ':': q23,
 	}
+        global string
+        string = string + x
 	global state
 	state = entrada[char]
 	
@@ -54,13 +59,30 @@ def q1(x):
 		global state
 		state=q0 
 	else: 
-		global error 
-		error="Caracter no valido: "+x		
-
-def q2(x):
-    x= x - 2
-    print x
-
+		global state
+                state = q1
+        
+        return 0
+                 
+def q2(x): 
+	if(x in numeros):
+		global state
+                state = q2
+	else:
+                global state
+                state = q3
+        global string
+        string = string + x
+        return 0
+                
+def q3(x): 
+	global state
+        state = q0
+        global string
+        string = string + x
+        tokens.add(["NUMERO",string])        
+        return 1
+                
 def process(line):
 	#estados = {
 	    #'q0': a,
@@ -101,7 +123,8 @@ def process(line):
 		print "El estado es: " + state
 		print "X es: " + repr(x)
 		#valor = estados[state](x)
-		valor = state(x)
+                valor = state(x)                   #Valor almacena cuantos caracteres hay que retroceder luego de llegar al estado
+                i = i - valor
     #x = x+1
 	#print estados
 
