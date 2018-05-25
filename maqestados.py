@@ -81,8 +81,88 @@ def q3(x):
         global string
         string = string + x
         tokens.add(["NUMERO",string])        
+        global string = ""
         return 1
+
+def q4(x): 
+	global state
+        state = q0
+        global string = ""
+        tokens.add(["CORCHETE_A",x])        
+        return 0
+
+def q5(x): 
+	global state
+        state = q0
+        global string = ""
+        tokens.add(["CORCHETE_C",x])        
+        return 0
+
+def q6(x): 
+	global string = string + x
+        entrada={
+                '=' : q8
+                '>' : q9
+        }
+        try:
+                global state= entrada[x]
+        except KeyError:
+                global state=q7
                 
+        return 0
+
+def q7(x): 
+	global state = q0
+        global string = string[:-1]
+        tokens.add(["OPERADOR_RELACIONAL",string])        
+        global string = ""
+        return 1
+
+def q8(x): 
+	global state = q0
+        tokens.add(["OPERADOR_RELACIONAL",string])        
+        global string = ""
+        return 0
+
+def q9(x): 
+	global state = q0
+        tokens.add(["OPERADOR_RELACIONAL",string])        
+        global string = ""
+        return 0
+
+def q10(x): 
+	global string = string + x
+        entrada={
+                '=' : q12
+        }
+        try:
+                global state= entrada[x]
+        except KeyError:
+                global state=q11
+                
+        return 0
+
+def q11(x):
+        global string = string[:-1]
+        tokens.add["OPERADOR_RELACIONAL",string]
+        global string=""
+        global state=q0
+        return 1
+
+def q12(x):
+        tokens.add["OPERADOR_RELACIONAL",string]
+        global string=""
+        global state=q0
+        return 0
+
+def q13(x):
+        tokens.add["PUNTO_COMA",string]
+        global string=""
+        global state=q0
+        return 0
+
+
+
 def process(line):
 	#estados = {
 	    #'q0': a,
