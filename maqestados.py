@@ -11,7 +11,7 @@ archivo = sys.argv[1]
 #Lista de Tokens reconocidos
 tokens=[]
 #Estado actual
-state=q0
+state='q0'
 #Letras
 letras =  (string.join(map(chr, range(97, 123)),'\',\'')) + '_'
 #Numeros
@@ -20,6 +20,8 @@ numeros = xrange(0,9)
 error=""
 #String procesado
 string=""
+#Palabras reservadas
+palabrasReservadas=["BEGIN","END","WHILE","TRUE","FALSE","IF","ELSE","PROGRAM","DO","THEN","AND","OR","FUNCTION","INTEGER","PROCEDURE","READ","VAR","WRITE"]
 
 	
 def q0(x):
@@ -57,7 +59,7 @@ def q0(x):
 def q1(x): 
 	if(x=='}'):
 		global state
-		state=q0 
+		state='q0' 
 	else: 
 		global state
                 state = q1
@@ -81,91 +83,205 @@ def q3(x):
         global string
         string = string + x
         tokens.add(["NUMERO",string])        
-        global string = ""
+        global string
+        string = ""
         return 1
 
 def q4(x): 
 	global state
-        state = q0
-        global string = ""
-        tokens.add(["CORCHETE_A",x])        
+        state = 'q0'
+        global string
+        string = ""
+        tokens.append(["CORCHETE_A",x])        
         return 0
 
 def q5(x): 
 	global state
-        state = q0
-        global string = ""
-        tokens.add(["CORCHETE_C",x])        
+        state = 'q0'
+        global string
+        string = ""
+        tokens.append(["CORCHETE_C",x])        
         return 0
 
 def q6(x): 
-	global string = string + x
+	global string
+        string = string + x
         entrada={
-                '=' : q8
+                '=' : q8,
                 '>' : q9
         }
         try:
-                global state= entrada[x]
+                global state
+                state= entrada[x]
         except KeyError:
-                global state=q7
+                global state
+                state=q7
                 
         return 0
 
 def q7(x): 
-	global state = q0
-        global string = string[:-1]
-        tokens.add(["OPERADOR_RELACIONAL",string])        
-        global string = ""
+	global state
+        state = 'q0'
+        global string
+        string = string[:-1]
+        tokens.append(["OPERADOR_RELACIONAL",string])        
+        global string
+        string = ""
         return 1
 
 def q8(x): 
-	global state = q0
-        tokens.add(["OPERADOR_RELACIONAL",string])        
-        global string = ""
+	global state
+        state = 'q0'
+        tokens.append(["OPERADOR_RELACIONAL",string])        
+        global string
+        string = ""
         return 0
 
 def q9(x): 
-	global state = q0
-        tokens.add(["OPERADOR_RELACIONAL",string])        
-        global string = ""
+	global state
+        state = 'q0'
+        tokens.append(["OPERADOR_RELACIONAL",string])        
+        global string
+        string = ""
         return 0
 
 def q10(x): 
-	global string = string + x
+	global string
+        string = string + x
         entrada={
                 '=' : q12
         }
         try:
-                global state= entrada[x]
+                global state
+                state = entrada[x]
         except KeyError:
-                global state=q11
+                global state
+                state = q11
                 
         return 0
 
 def q11(x):
-        global string = string[:-1]
-        tokens.add["OPERADOR_RELACIONAL",string]
-        global string=""
-        global state=q0
+        global string
+        string = string[:-1]
+        tokens.append["OPERADOR_RELACIONAL",string]
+        global string
+        string =""
+        global state
+        state ='q0'
         return 1
 
 def q12(x):
-        tokens.add["OPERADOR_RELACIONAL",string]
-        global string=""
-        global state=q0
+        tokens.append["OPERADOR_RELACIONAL",string]
+        global string
+        string = ""
+        global state
+        state = 'q0'
         return 0
 
 def q13(x):
-        tokens.add["PUNTO_COMA",string]
-        global string=""
-        global state=q0
+        tokens.append["PUNTO_COMA",string]
+        global string
+        string = ""
+        global state
+        state = 'q0'
         return 0
 
+def q14(x):
+        if(x in letras):
+		char = letra
+	elif(x in numeros):
+		char = numero
+	else:
+		char = x
+	
+        entrada={
+		'numero': q14,
+	        'letra': q14,
+	}
+        try:
+                global state
+                state = entrada[x]
+        except KeyError:
+                global state
+                state = q15
+        global string
+        string = string + x
+	return 0
+
+def q15(x):
+        global string
+        string = string[:-1]
+        if(string.upper in palabrasReservadas):
+                tokens.append[string.upper,string]
+        else:
+                tokens.append["IDENTIFICADOR",string]
+        global string
+        string =""
+        global state
+        state ='q0'
+        return 1
+
+def q16(x):
+        tokens.append["OPERADOR_ARITMETICO",string]
+        global string
+        string =""
+        global state
+        state ='q0'
+        return 0
+
+def q17(x):
+        tokens.append["OPERADOR_ARITMETICO",string]
+        global string
+        string =""
+        global state
+        state ='q0'
+        return 0
+
+def q18(x):
+        tokens.append["OPERADOR_TERMINO",string]
+        global string
+        string = ""
+        global state
+        state = 'q0'
+        return 0
+
+def q19(x):
+        tokens.append["OPERADOR_TERMINO",string]
+        global string
+        string = ""
+        global state
+        state = 'q0'
+        return 0
+
+def q20(x):
+        tokens.append["PUNTO",string]
+        global string
+        string=""
+        global state
+        state = 'q0'
+        return 0
+
+def q21(x):
+        tokens.append["PARENTESIS_A",string]
+        global string
+        string = ""
+        global state
+        state = 'q0'
+        return 0
+
+
+def q22(x):
+        tokens.append["PARENTESIS_C",string]
+        global string
+        string = ""
+        global state
+        state = 'q0'
+        return 0
 
 
 def process(line):
 	#estados = {
-	    #'q0': a,
+	    #''q0'': a,
 	    #'q1': b,
 	    #'q2': c,
 	    #'q3': a,
@@ -198,7 +314,7 @@ def process(line):
 	    #'q30': a,
 	    #'q31': a,
 	#}
-	for i in xrange(line.length):
+	for i in xrange(len(line)):
 		x = line[i]
 		print "El estado es: " + state
 		print "X es: " + repr(x)
@@ -213,7 +329,10 @@ def process(line):
 #Procesamos el archivo    
 with open(archivo) as f:
     for line in f:
-		tokens.add(process(line))    
+		tokens.append(process(line))
+
+close(archivo)
+print tokens
     
 #letras = string.ascii_lowercase
 #letras = string.join(map(chr, range(97, 123)),'\',\'') #or list(map(chr, range(ord('a'), ord('z')+1)))
