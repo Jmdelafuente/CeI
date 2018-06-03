@@ -42,6 +42,8 @@ def q0(x):
         cadena = cadena + x
 	global state
 	state = entrada[ch]
+        if(state=='q0'):
+                cadena=""
 	return ret
 
 def q1(x):
@@ -211,10 +213,10 @@ def q14(x):
 	return ret
 
 def q15(x):
-        ret = 1
+        ret = 2
         global cadena
         cadena = cadena[:-1]
-        if(cadena.upper in palabrasReservadas):
+        if(cadena.upper() in palabrasReservadas):
                 global tokens
                 tokens.append([cadena.upper(),cadena])
         else:
@@ -311,10 +313,12 @@ def q24(x):
         return ret
 
 def process(line):
-	for i in xrange(len(line)):
+        i=0
+	while i < (len(line)):
 	        x = line[i]
                 x=x.upper()
-		print "El estado es: " + state
+                i +=1
+                print "El estado es: " + state
 		print "X es: " + repr(x)
                 try:
                         valor = estados[state](x)                   #Valor almacena cuantos caracteres hay que retroceder luego de llegar al estado
@@ -323,7 +327,7 @@ def process(line):
                         print "Token no reconocido " + cadena
                         global cadena
                         cadena = ""
-
+                
 
 ##Variables globales
 
@@ -372,17 +376,16 @@ estados = {
 	}
 	
  
-print letras
-global tokens
-tokens.append("PRUEBA")
+
 #Procesamos el archivo    
 with open(archivo) as f:
     for line in f:
 		tokens.append(process(line))
 
 f.close()
+global tokens
+tokens = [x for x in tokens if x is not None]
 print tokens
-    
 #letras = cadena.ascii_lowercase
 #letras = cadenay.join(map(chr, range(97, 123)),'\',\'') #or list(map(chr, range(ord('a'), ord('z')+1)))
 
