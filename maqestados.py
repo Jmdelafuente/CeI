@@ -70,18 +70,18 @@ def q2(x):
         return ret
                 
 def q3(x):
-        ret = 1
+        ret = 2
 	global state
         state = 'q0'
         global cadena
-        cadena = cadena + x
-        tokens.add(["NUMERO",cadena])        
+        cadena = cadena[:-1]
+        tokens.append(["NUMERO",cadena])        
         global cadena
         cadena = ""
         return ret
 
 def q4(x):
-        ret = 0
+        ret = 1
 	global state
         state = 'q0'
         global cadena
@@ -90,7 +90,7 @@ def q4(x):
         return ret
 
 def q5(x):
-        ret = 0
+        ret = 1
 	global state
         state = 'q0'
         global cadena
@@ -116,7 +116,7 @@ def q6(x):
         return ret
 
 def q7(x):
-        ret = 1
+        ret = 2
 	global state
         state = 'q0'
         global cadena
@@ -127,7 +127,7 @@ def q7(x):
         return ret
 
 def q8(x):
-        ret = 0
+        ret = 1
 	global state
         state = 'q0'
         tokens.append(["OPERADOR_RELACIONAL",cadena])        
@@ -136,7 +136,7 @@ def q8(x):
         return ret
 
 def q9(x):
-        ret = 0
+        ret = 1
 	global state
         state = 'q0'
         tokens.append(["OPERADOR_RELACIONAL",cadena])        
@@ -161,7 +161,7 @@ def q10(x):
         return ret
 
 def q11(x):
-        ret = 1
+        ret = 2
         global cadena
         cadena = cadena[:-1]
         tokens.append(["OPERADOR_RELACIONAL",cadena])
@@ -172,7 +172,7 @@ def q11(x):
         return ret
 
 def q12(x):
-        ret = 0
+        ret = 1
         tokens.append(["OPERADOR_RELACIONAL",cadena])
         global cadena
         cadena = ""
@@ -181,7 +181,7 @@ def q12(x):
         return ret
 
 def q13(x):
-        ret = 0
+        ret = 1
         tokens.append(["PUNTO_COMA",cadena])
         global cadena
         cadena = ""
@@ -229,7 +229,7 @@ def q15(x):
         return ret
 
 def q16(x):
-        ret = 0
+        ret = 1
         tokens.append(["OPERADOR_ARITMETICO",cadena])
         global cadena
         cadena =""
@@ -238,7 +238,7 @@ def q16(x):
         return ret
 
 def q17(x):
-        ret = 0
+        ret = 1
         tokens.append(["OPERADOR_ARITMETICO",cadena])
         global cadena
         cadena =""
@@ -247,7 +247,7 @@ def q17(x):
         return ret
 
 def q18(x):
-        ret = 0
+        ret = 1
         tokens.append(["OPERADOR_TERMINO",cadena])
         global cadena
         cadena = ""
@@ -256,7 +256,7 @@ def q18(x):
         return ret
 
 def q19(x):
-        ret = 0
+        ret = 1
         tokens.append(["OPERADOR_TERMINO",cadena])
         global cadena
         cadena = ""
@@ -265,7 +265,7 @@ def q19(x):
         return ret
 
 def q20(x):
-        ret = 0
+        ret = 1
         tokens.append(["PUNTO",cadena])
         global cadena
         cadena=""
@@ -274,7 +274,7 @@ def q20(x):
         return ret
 
 def q21(x):
-        ret = 0
+        ret = 1
         tokens.append(["PARENTESIS_A",cadena])
         global cadena
         cadena = ""
@@ -284,7 +284,7 @@ def q21(x):
 
 
 def q22(x):
-        ret = 0
+        ret = 1
         tokens.append(["PARENTESIS_C",cadena])
         global cadena
         cadena = ""
@@ -304,8 +304,8 @@ def q23(x):
         return ret
 
 def q24(x):
-        ret = 0
-        tokens.append["ASIGNACION",cadena]
+        ret = 1
+        tokens.append(["ASIGNACION",cadena])
         global cadena
         cadena = ""
         global state
@@ -338,7 +338,7 @@ state='q0'
 #Letras
 letras =  list(string.ascii_uppercase)
 #Numeros
-numeros = xrange(0,9)
+numeros = ['1','2','3','4','5','6','7','8','9','0']
 #Error
 error=""
 #Cadena procesado
