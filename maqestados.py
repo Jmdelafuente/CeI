@@ -42,18 +42,22 @@ def q0(x):
         cadena = cadena + x
 	global state
 	state = entrada[ch]
-        if(state=='q0'):
-                cadena=""
+	if(state=='q0'):
+		cadena=""
 	return ret
 
 def q1(x):
         ret = 0
 	if(x=='}'):
+		global bandera
+		bandera = False
 		global state
 		state='q0' 
 	else: 
 		global state
                 state = 'q1'
+		global bandera
+		bandera = True
         
         return ret
                  
@@ -331,6 +335,8 @@ def process(line):
 
 ##Variables globales
 
+#Bandera para comentario
+bandera = False
 #Lista de Tokens reconocidos
 tokens=[]
 #Estado actual
@@ -385,11 +391,15 @@ with open(archivo) as f:
 f.close()
 global tokens
 tokens = [x for x in tokens if x is not None]
+global bandera
+if bandera:
+	global error
+	error = error + " Comentario no finalizado" #hay que pensar si puede haber mas de un error como tratarlo quizas imprimir un error por linea y enumerarlos
 print tokens
+print error
+
+
 #letras = cadena.ascii_lowercase
 #letras = cadenay.join(map(chr, range(97, 123)),'\',\'') #or list(map(chr, range(ord('a'), ord('z')+1)))
 
 #print "Que hermoso switch que hice en Python"
-
-
-    
