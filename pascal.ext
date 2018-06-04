@@ -8,8 +8,8 @@ begin
 end
 
 var
-int b
-int a
+integer b
+integer a
 
 BEGIN
 b:=1000
