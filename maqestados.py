@@ -353,13 +353,14 @@ def process(line,nroLinea):
                 x = line[i]
                 x = x.upper()
                 i +=1
-                print "El estado es: " + state
-		print "X es: " + repr(x)
+                if(args.verbose_mode):
+                        print "El estado es: " + state
+		        print "X es: " + repr(x)
                 try:
                         valor = estados[state](x)                   #Valor almacena cuantos caracteres hay que retroceder luego de llegar al estado
                         i = i - valor
                 except KeyError:
-                        error.append('['+nroLinea+']' " Token no reconocido " + cadena)
+                        error.append('['+repr(nroLinea)+']' " Token no reconocido " + cadena)
                         cadena = ""
                 
 
@@ -427,7 +428,7 @@ estados = {
                         
                         
 #Procesamos el archivo    
-numeroLinea=0
+numeroLinea=1
 with open(args.archivo) as f:
     for line in f:
 		tokens.append(process(line,numeroLinea))
@@ -437,7 +438,13 @@ f.close()
 tokens = [x for x in tokens if x is not None]
 if bandera:
 	error.append("[EOF] Final de archivo inesperado: Comentario no finalizado") #hay que pensar si puede haber mas de un error como tratarlo quizas imprimir un error por linea y enumerarlos
-print tokens
+if(args.verbose_mode):
+        print tokens
+
+with open(args.archivo+'.tokens', 'w') as file:
+        for t in tokens:
+                file.write(repr(t))
+                file.write("\n")
 for e in error:
         print e
 
