@@ -1,0 +1,28 @@
+PROGRAM prueba
+function funcion ()
+var
+{Comentario seguramente util y perspicaz}
+integer a
+begin
+	a := 10
+end
+
+var
+integer b
+integer a
+
+BEGIN
+b:=1000
+false
+b and false
+if(a > b) THEN
+begin
+	{simbolo no pertenesiente al lenguale}
+    a := @
+    true
+end
+else
+noidentado
+
+
+END.
