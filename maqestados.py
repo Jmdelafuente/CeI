@@ -445,7 +445,9 @@ with open(args.archivo+'.tokens', 'w') as file:
         for t in tokens:
                 file.write(repr(t))
                 file.write("\n")
-for e in error:
-        print e
+if(error):
+        print "ERRORES DETECTADOS: "+ repr(len(error))
+        for e in error:
+                print e
 
 
