@@ -449,5 +449,6 @@ if(error):
         print "ERRORES DETECTADOS: "+ repr(len(error))
         for e in error:
                 print e
-
+else:
+        print "Analisis Finalizado. No hay errores detectados"
 
