@@ -3,21 +3,24 @@ import random
 #import sys
 import argparse
 
-#Argumentos y pasaje de parametros
+#Definicion de argumentos y pasaje de parametros.
 
 parser = argparse.ArgumentParser(description="Analizador Sintactico de Pascal Reducido")
 parser.add_argument("archivo", help="Ruta relativa del fichero a analizar sintacticamente.", type=str)
 parser.add_argument("verbose_mode", help="True para modo Verboso con impresiones de control.",nargs='?', default=False, type=bool)
 args = parser.parse_args()
-#print args
-#archivo = args[1]
 
 	
 
 
-#Procedimientos de los estados, definicion: ESTADO(letra) :- estado
+#Procedimientos de los estados, definicion: ESTADO(letra) -> estado [retroceso] [token]
+#El funcionamiento de cada estado es sencillo, para una entrada revisa que transicion corresponde, actualiza el estado de acuerdo a la transicion, acumula la cadena procesada agregando la entrada y si corresponde agrega el token a la lista. Asimismo puede retornar un entero para avisar cuantos caracteres corresponde retroceder en el analisis de acuerdo a lo especificado en la maquina de estados del informe
+
 def q0(x):
+        global cadena
+        global state
         ret = 0
+        
 	if(x in letras):
 		ch = 'letra'
 	elif(x in numeros):
@@ -47,11 +50,11 @@ def q0(x):
                 ' ':  'q0',
                 '\t': 'q0'
 	}
-        global cadena
+        
         cadena = cadena + x
-	global state
 	state = entrada[ch]
-	if(state=='q0'):
+
+        if(state=='q0'):
 		cadena=""
 	return ret
 
@@ -324,11 +327,12 @@ def q22(x):
 def q23(x):
         ret = 0
         global cadena
+        global state
+        
         cadena = cadena + x
         entrada={
                 '=' : 'q24'
         }
-        global state
         state = entrada[x]
         return ret
 
@@ -347,54 +351,70 @@ def process(line,nroLinea):
         
         global cadena
         global error
-        
+
+        #Revision caracter a caracter de la linea
 	while i < (len(line)):
-        
+                #Por normalizacion, se trabaja en mayusculas
                 x = line[i]
                 x = x.upper()
                 i +=1
+
+                #Salida de programador activada?
                 if(args.verbose_mode):
                         print "El estado es: " + state
 		        print "X es: " + repr(x)
+
+                #Llamada a la maquina de estados con estado 'state' y entrada 'x'
                 try:
                         valor = estados[state](x)                   #Valor almacena cuantos caracteres hay que retroceder luego de llegar al estado
                         i = i - valor
+
+                #No existe transicion para ese estado y ese caracter
                 except KeyError:
-                        error.append('['+repr(nroLinea)+']' " Token no reconocido " + cadena)
+                        error.append('['+repr(nroLinea)+']' " Caracter(es) no reconocido(s) " + cadena)
                         cadena = ""
                 
 
 
 ##Variables globales
+
 #Bandera de modo verboso
 global verbose
 verbose= False
+
 #Bandera para control de comentario abierto
 global bandera
 bandera = False
+
 #Lista de Tokens reconocidos
 global tokens
 tokens=[]
+
 #Estado actual
 global state
 state='q0'
+
 #Letras
 global letras
 letras =  list(string.ascii_uppercase)
-#print letras
+
 #Numeros
 global numeros
 numeros = ['1','2','3','4','5','6','7','8','9','0']
+
 #Error
 global error
 error=[]
+
 #Cadena procesado
 global cadena
 cadena=""
+
 #Palabras reservadas
 global palabrasReservadas
 palabrasReservadas=["BEGIN","BOOL","END","WHILE","TRUE","FALSE","IF","ELSE","PROGRAM","DO","THEN","AND","OR","FUNCTION","INTEGER","PROCEDURE","READ","VAR","WRITE"]
-#Definicion de estados
+
+#Definicion de estados posibles
 global estados
 estados = {
 	'q0': q0,
@@ -427,7 +447,7 @@ estados = {
 
                         
                         
-#Procesamos el archivo    
+#Procesamos el archivo linea por linea    
 numeroLinea=1
 with open(args.archivo) as f:
     for line in f:
@@ -436,15 +456,21 @@ with open(args.archivo) as f:
 f.close()
 
 tokens = [x for x in tokens if x is not None]
+#Corroboramos EOF y Comentario abierto
 if bandera:
 	error.append("[EOF] Final de archivo inesperado: Comentario no finalizado") #hay que pensar si puede haber mas de un error como tratarlo quizas imprimir un error por linea y enumerarlos
+        
+#Salida de Tokens
 if(args.verbose_mode):
         print tokens
 
+#Guardando archivo .tokens
 with open(args.archivo+'.tokens', 'w') as file:
         for t in tokens:
                 file.write(repr(t))
                 file.write("\n")
+                
+#Corroboramos la existencia de errores y los reportamos
 if(error):
         print "ERRORES DETECTADOS: "+ repr(len(error))
         for e in error:
