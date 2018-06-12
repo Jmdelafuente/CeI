@@ -1,7 +1,13 @@
+#!/usr/bin/env python
+
 import string
 import random
 #import sys
 import argparse
+
+#Authors: Bonet Peinado Daiana, de la Fuente Juan M.
+#Year: 2018
+#License: GNU GPLv3. See LICENSE file for more information.
 
 #Definicion de argumentos y pasaje de parametros.
 
@@ -78,18 +84,18 @@ def q1(x):
 def q2(x):
         ret = 0
         global state
-                
+        global cadena
+        
 	if(x in numeros):
 		state = 'q2'
 	else:
-                #global state
+                ret = 1
                 state = 'q3'
-        global cadena
         cadena = cadena + x
         return ret
                 
 def q3(x):
-        ret = 2
+        ret = 1
 	global state
         global cadena
         
@@ -132,13 +138,13 @@ def q6(x):
         try:
                 state= entrada[x]
         except KeyError:
-        #        global state
+                ret = 1
                 state='q7'
                 
         return ret
 
 def q7(x):
-        ret = 2
+        ret = 1
 	global state
         state = 'q0'
         global cadena
@@ -178,12 +184,13 @@ def q10(x):
         try:
                 state = entrada[x]
         except KeyError:
+                ret = 1
                 state = 'q11'
                 
         return ret
 
 def q11(x):
-        ret = 2
+        ret = 1
         global cadena
         global state
         
@@ -234,15 +241,16 @@ def q14(x):
                 state = entrada[char]
         except KeyError:
                 state = 'q15'
+                ret = 1
         cadena = cadena + x
 	return ret
 
 def q15(x):
-        ret = 2
+        ret = 1
         global cadena
         global tokens
         global state
-        
+
         cadena = cadena[:-1]
         if(cadena.upper() in palabrasReservadas):
                 tokens.append([cadena.upper(),cadena])
@@ -352,6 +360,9 @@ def process(line,nroLinea):
         global cadena
         global error
 
+        if(args.verbose_mode):
+                print "Longitud de Linea: " + repr(len(line))
+        
         #Revision caracter a caracter de la linea
 	while i < (len(line)):
                 #Por normalizacion, se trabaja en mayusculas
@@ -363,7 +374,8 @@ def process(line,nroLinea):
                 if(args.verbose_mode):
                         print "El estado es: " + state
 		        print "X es: " + repr(x)
-
+                        print "Caracter numero: " + repr(i)
+                        
                 #Llamada a la maquina de estados con estado 'state' y entrada 'x'
                 try:
                         valor = estados[state](x)                   #Valor almacena cuantos caracteres hay que retroceder luego de llegar al estado
