@@ -36,6 +36,7 @@ def q0(x):
 	        '<': 'q6',
 	        '>': 'q10',
 	        ';': 'q13',
+		'=': 'q25',
 	        'letra': 'q14',
                 '_': 'q14',
 	        '+': 'q16',
@@ -345,6 +346,17 @@ def q24(x):
         cadena = ""
         state = 'q0'
         return ret
+
+def q25(x):
+        global cadena
+        global state
+
+        ret = 1
+        tokens.append(["OPERADOR_RELACIONAL",cadena])
+        cadena = ""
+        state = 'q0'
+        return ret
+
 
 def process(line,nroLinea):
         i=0
