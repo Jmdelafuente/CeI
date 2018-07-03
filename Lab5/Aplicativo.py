@@ -22,17 +22,6 @@ args = parser.parse_args()
 #Procedimientos de los estados, definicion: ESTADO(letra) -> estado [retroceso] [token]
 #El funcionamiento de cada estado es sencillo, para una entrada revisa que transicion corresponde, actualiza el estado de acuerdo a la transicion, acumula la cadena procesada agregando la entrada y si corresponde agrega el token a la lista. Asimismo puede retornar un entero para avisar cuantos caracteres corresponde retroceder en el analisis de acuerdo a lo especificado en la maquina de estados del informe
 
-def letra():
-        global preanalisis
-        global state
-        ret = 0
-        
-		
-			
-	
-	
-def integer():
-
 
 def process(line,nroLinea):
         i=0
@@ -111,19 +100,19 @@ def letra():
 	else:
 		reportar("Error de Sintaxis",preanalisis,"letra")
 
-def digitos()
+def digitos():
 	if(preanalisis in numeros):
 		match(preanalisis)
 	else:
 		reportar("Error de Sintaxis",preanalisis,"digito")
 
-def digitosRep()
+def digitosRep():
 	if(preanalisis in numeros):
 		digito()
 	else:
 		reportar("Error de Sintaxis",preanalisis,"digitosRep")
 
-def digitosRep1()
+def digitosRep1():
 	if(preanalisis in numeros):
 		digitosRep()
 
@@ -146,7 +135,7 @@ def declaracionVariables():
 	if(preanalisis == "var"):
 		match("var")
 		listaVariables()
-		match(;)
+		match(";")
 	else:
 		reportar("Error de Sintaxis",preanalisis,"declaracionVariables")
 
@@ -169,7 +158,7 @@ def listaIdentificador():
 
 def listaIdentificadorRep():
 	if( preanalisis == ","): 
-		match(,)
+		match(",")
 		identificador()
 		listaIdentificadorRep()
 
@@ -183,29 +172,29 @@ def tipoVariables():
 
 def sentenciaCompuesta():
 	case2 = {'write(','while','read(','if'}
-    if ( preanalisis == "begin") :
-        match(begin)
-        sentenciaCompuestaRep()
-        fin()
-    elif ((preanalisis in letras) or (preanalisis in case2)) :
-        sentencia()
-        match(;)
-    else:
+	if(preanalisis == "begin"):
+		match(begin)
+		sentenciaCompuestaRep()
+		fin()
+	elif ((preanalisis in letras) or (preanalisis in case2)) :
+		sentencia()
+		match(";")
+	else:
 		reportar("Error de Sintaxis",preanalisis,"sentenciaCompuesta")
 
 
 def sentenciaCompuestaRep():
 	case2 = {'write(','while','read(','if'}
-    if ((preanalisis in letras) or (preanalisis in case2)) :
-        compuesta()
-        sentenciaCompuestaRep()
+	if((preanalisis in letras) or (preanalisis in case2)) :
+		compuesta()
+		sentenciaCompuestaRep()
         
 def compuesta():
 	case1 = {'begin','write(','while','read(','if'}
-    if ((preanalisis in letras) or (preanalisis in case1)) :
-        sentenciaCompuesta()
-        compuesta()
-    else:
+	if ((preanalisis in letras) or (preanalisis in case1)) :
+		sentenciaCompuesta()
+		compuesta()
+	else:
 		reportar("Error de Sintaxis",preanalisis,"compuesta")
 
 def fin():
@@ -223,7 +212,7 @@ def sentencia():
 	if(preanalisis == "if"):
 		ifthen()
 	elif(preanalisis == 'while'):
-		mientras9)
+		mientras()
 	elif(preanalisis == 'write('):
 		match("write(")
 		llamada2()
@@ -244,8 +233,108 @@ def asignacion():
 		match(";")
 	else:
 		reportar("Error de Sintaxis",preanalisis,"asignacion")
-		
 
+def expresionAritmetica():
+	global letra
+	global digito
+	case1 = {"write(","true","false","read(","-"}
+	if ((preanalisis in letra) or (preanalisis in digito) or (preanalisis in case1)) :
+		termino() 
+		expresionAritmetica1()
+	else:
+		reportar("error de sintaxis",preanalisis,"expresionAritmetica1")
+        
+def expresionAritmetica1():
+	if ( preanalisis == "+"):
+	  match("+")
+	  termino()
+	  expresionAritmetica1()
+	elif( preanalisis == "-"):
+	  match("-")
+	  termino()
+	  expresionAritmetica1()
+
+
+def termino():
+	global letra
+	global digito
+	case1 = {"write(","true","false","read(","-"}
+	if((preanalisis in letra) or (preanalisis in digito) or (preanalisis in case1)) :
+			factor()
+			termino1()
+	else:
+			reportar("Error de Sintaxis")
+
+def termino1():
+	if (preanalisis == "*") :
+				match("*")
+				factor()
+				termino1()
+	elif (preanalisis == "/") :
+				match("/")
+				factor()
+				termino1()
+	else:
+				reportar("error de sintaxis",preanalisis,"termino1")
+
+
+def factor():
+	global letra
+	global digito
+	if ( preanalisis == "}"):
+			 match("(")
+			 expresionAritmetica()
+			 match(")")
+	elif (preanalisis in letra) :
+				identificador()
+	elif (preanalisis == "write(") :
+				match("write(")
+				llamada2()
+	elif (preanalisis == "read(") :
+				match("read(")
+				identificador()
+				match(")")
+	elif (preanalisis in digito) :
+				digitos()
+	elif (preanalisis == "true") :
+				match("true")
+	elif (preanalisis == "false") :
+				match("false")
+	else:
+				reportar("error de sintaxis",preanalisis,"factor")
+
+def factor1():
+	if ( preanalisis == "(") :
+		match("(")
+		llamada1()
+
+def operadorRelacional():
+	if ( preanalisis == "="):
+				match("=")
+	elif (preanalisis == "<>") :
+				match("<>")
+	elif (preanalisis == "<") :
+				match("<")
+	elif (preanalisis == "<=") :
+				match("<=")
+	elif (preanalisis == ">") :
+				match(">")
+	elif (preanalisis == ">=") :
+				match(">=")
+	else:
+				reportar("error de sintaxis",preanalisis,"operadorRelacional")
+				
+def programa():
+	if ( preanalisis == "program") :
+			 match("program")
+			 Identificador()
+			 DeclaracionVariableOpt()
+			 ProgramaRepPyf()
+			 match("begin")
+			 ProgramaRepSentencia()
+			 match("end.")
+	else:
+			 reportar("error de sintaxis",preanalisis,"programa")
 
 #Procesamos el archivo linea por linea    
 numeroLinea=1
