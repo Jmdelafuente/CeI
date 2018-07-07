@@ -1,0 +1,25 @@
+PROGRAM prueba
+var
+{Comentario seguramente util y perspicaz}
+a : integer;
+
+procedure funcion ();
+var
+a : integer;
+begin
+	a := 10<9;
+end;
+
+
+BEGIN
+b:=-10003;
+{b and false;}
+if not(a > b) THEN
+begin
+	c := true or false
+end
+else
+noidentado();
+
+
+END.
