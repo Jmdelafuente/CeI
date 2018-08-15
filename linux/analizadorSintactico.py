@@ -1,23 +1,23 @@
 #!/usr/bin/env python
 # coding=utf-8
 
+#Authors: Bonet Peinado Daiana, de la Fuente Juan M.
+#Year: 2018
+#License: GNU GPLv3. See LICENSE file for more information.
+
+
 import string
 import random
 import argparse
 import re
 
-#Authors: Bonet Peinado Daiana, de la Fuente Juan M.
-#Year: 2018
-#License: GNU GPLv3. See LICENSE file for more information.
 
 #Definicion de argumentos y pasaje de parametros.
 
-parser = argparse.ArgumentParser(description="Analizador Sintactico Predictivo de Pascal Reducido")
-parser.add_argument("archivo", help="Ruta relativa del fichero de tokens a analizar sintacticamente.", type=str)
-parser.add_argument("verbose_mode", help="True para modo Verboso con impresiones de control.",nargs='?', default=False, type=bool)
+parser = argparse.ArgumentParser(description="Analizador Sintactico Predictivo de Pascal Reducido", epilog="Analizador Sintactico para Pascal Reducido desarrollado en Python para las materias de Diseño de Compiladores e Interpretes y Laboratorio de Compiladores e Interpretes. \n Facultad de Informatica - Universidad Nacional del Comahue. \n Distribuido bajo licencia GNUv3. https://github.com/Jmdelafuente22/CeI")
+parser.add_argument("archivo", metavar='archivo' ,help="Ruta relativa del fichero de tokens a analizar sintacticamente.", type=str)
+parser.add_argument("verbose_mode", metavar='modo_verboso' ,help="True para modo Verboso con impresiones de control.",nargs='?', default=False, type=bool)
 args = parser.parse_args()
-
-	
 
 ##Variables globales
 
@@ -302,11 +302,11 @@ def termino1():
 		print("termino1")
 	if (preanalisis == "*") :
 				match("*")
-				factor()
+				termino()
 				termino1()
 	elif (preanalisis == "/") :
 				match("/")
-				factor()
+				termino()
 				termino1()
 
 

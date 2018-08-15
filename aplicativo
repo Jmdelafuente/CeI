@@ -1,4 +1,4 @@
 #!/bin/bash
 python analizador.py $1 $2 &
 wait
-python analizadorPredictivoNoRecursivo.py $1 $2
+python analizadorSintactico.py $1 $2

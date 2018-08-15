@@ -344,7 +344,11 @@ def q23(x):
         entrada={
                 '=' : 'q24'
         }
-        state = entrada[x]
+        try:
+                state= entrada[x]
+        except KeyError:
+                ret = 1
+                state='q26'
         return ret
 
 def q24(x):
@@ -365,6 +369,17 @@ def q25(x):
         tokens.append(["OPERADOR_RELACIONAL",cadena])
         cadena = ""
         state = 'q0'
+        return ret
+
+
+def q26(x):
+        ret = 1
+	global state
+        state = 'q0'
+        global cadena
+        cadena = cadena[:-1]
+        tokens.append(["DECLARACION",cadena])        
+        cadena = ""
         return ret
 
 
@@ -469,6 +484,7 @@ estados = {
         'q23': q23,
         'q24': q24,
         'q25': q25,
+        'q26': q26,
 	}
 
                         
@@ -495,7 +511,7 @@ with open(args.archivo+'.tokens', 'w') as file:
         for t in tokens:
                 file.write(repr(t))
                 file.write("\n")
-                
+file.close()
 #Corroboramos la existencia de errores y los reportamos
 if(error):
         print "ERRORES DETECTADOS: "+ repr(len(error))

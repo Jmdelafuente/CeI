@@ -290,6 +290,10 @@ def termino():
 	if(((re.search(r"[a-z]",preanalisis)) and (preanalisis not in palabrasReservadas)) or (re.search(r"[0-9]",preanalisis)) or (preanalisis in case1)) :
 			factor()
 			termino1()
+	elif(preanalisis=='('):
+			match("(")
+			expresionGeneral()
+			match(")")
 	else:
 			reportar("Error de Sintaxis: se esperaba WRITE,READ,TRUE,FALSE,Identificador valido o Digitos",preanalisis,"expresionAritmetica1")
 
@@ -425,6 +429,7 @@ def compararAnd():
 	elif (((re.search(r"[a-z]",preanalisis)) and (preanalisis not in palabrasReservadas)) or re.search(r"[0-9]",preanalisis) or preanalisis in caso2):
 		expresionAritmetica() 
 		expresionAritmetica2() 
+		compararAnd1()
 	else:
 		reportar("Error de sintaxis: se esperaba WRITE,READ,TRUE,FALSE,NOT,(,-,Digito o Identificador valido",preanalisis,"expresionGeneral")
 
@@ -435,7 +440,6 @@ def expresionAritmetica2():
 	if(preanalisis  in caso1 ):
 		operadorRelacional()
 		expresionAritmetica()
-		compararAnd1()
 
 def compararAnd1():
 	if(verbose):

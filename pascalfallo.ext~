@@ -1,0 +1,26 @@
+PROGRAM prueba
+function funcion ()
+var
+{Comentario seguramente util y perspicaz}
+int a
+begin
+	a := 10
+end
+
+var
+int b
+int a
+
+BEGIN
+b:=1000
+false
+b and false
+if(a > b) THEN
+begin
+	true
+end
+else
+noidentado
+
+
+END.

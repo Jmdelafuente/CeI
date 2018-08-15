@@ -302,11 +302,11 @@ def termino1():
 		print("termino1")
 	if (preanalisis == "*") :
 				match("*")
-				factor()
+				termino()
 				termino1()
 	elif (preanalisis == "/") :
 				match("/")
-				factor()
+				termino()
 				termino1()
 
 

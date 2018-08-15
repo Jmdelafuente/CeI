@@ -16,8 +16,6 @@ parser.add_argument("archivo", help="Ruta relativa del fichero a analizar sintac
 parser.add_argument("verbose_mode", help="True para modo Verboso con impresiones de control.",nargs='?', default=False, type=bool)
 args = parser.parse_args()
 
-	
-
 
 #Procedimientos de los estados, definicion: ESTADO(letra) -> estado [retroceso] [token]
 #El funcionamiento de cada estado es sencillo, para una entrada revisa que transicion corresponde, actualiza el estado de acuerdo a la transicion, acumula la cadena procesada agregando la entrada y si corresponde agrega el token a la lista. Asimismo puede retornar un entero para avisar cuantos caracteres corresponde retroceder en el analisis de acuerdo a lo especificado en la maquina de estados del informe
@@ -344,7 +342,11 @@ def q23(x):
         entrada={
                 '=' : 'q24'
         }
-        state = entrada[x]
+        try:
+                state= entrada[x]
+        except KeyError:
+                ret = 1
+                state='q26'
         return ret
 
 def q24(x):
@@ -365,6 +367,17 @@ def q25(x):
         tokens.append(["OPERADOR_RELACIONAL",cadena])
         cadena = ""
         state = 'q0'
+        return ret
+
+
+def q26(x):
+        ret = 1
+	global state
+        state = 'q0'
+        global cadena
+        cadena = cadena[:-1]
+        tokens.append(["DECLARACION",cadena])        
+        cadena = ""
         return ret
 
 
@@ -469,6 +482,7 @@ estados = {
         'q23': q23,
         'q24': q24,
         'q25': q25,
+        'q26': q26,
 	}
 
                         
@@ -495,12 +509,12 @@ with open(args.archivo+'.tokens', 'w') as file:
         for t in tokens:
                 file.write(repr(t))
                 file.write("\n")
-                
+file.close()
 #Corroboramos la existencia de errores y los reportamos
 if(error):
-        print "ERRORES DETECTADOS: "+ repr(len(error))
+        print "ERRORES DETECTADOS EN ANALISIS LEXICO: "+ repr(len(error))
         for e in error:
                 print e
 else:
-        print "Analisis Finalizado. No hay errores detectados"
+        print "Analisis lexico finalizado. No hay errores detectados"
 

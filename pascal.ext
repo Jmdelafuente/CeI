@@ -1,26 +1,27 @@
 PROGRAM prueba
-function funcion ()
 var
 {Comentario seguramente util y perspicaz}
-int a
-begin
-	a := 10
-end
+a : integer;
 
+procedure funcion ();
 var
-integer b
-integer a
+a : integer;
+begin
+	a := (10<9);
+	b:= 5 *  (9-2);
+	write(pepe);
+end;
+
 
 BEGIN
-b:=1000
-false
-b and false
-if(a > b) THEN
+b:=-10003;
+{b and false;}
+if not(a > b) THEN
 begin
-	true
+	c := true or false
 end
 else
-noidentado
+noidentado();
 
 
 END.
