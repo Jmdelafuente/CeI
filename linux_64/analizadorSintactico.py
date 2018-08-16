@@ -14,9 +14,9 @@ import re
 
 #Definicion de argumentos y pasaje de parametros.
 
-parser = argparse.ArgumentParser(description="Analizador Sintactico Predictivo de Pascal Reducido", epilog="Analizador Sintactico para Pascal Reducido desarrollado en Python para las materias de Diseño de Compiladores e Interpretes y Laboratorio de Compiladores e Interpretes. \n Facultad de Informatica - Universidad Nacional del Comahue. \n Distribuido bajo licencia GNUv3. https://github.com/Jmdelafuente22/CeI")
-parser.add_argument("archivo", metavar='archivo' ,help="Ruta relativa del fichero de tokens a analizar sintacticamente.", type=str)
-parser.add_argument("verbose_mode", metavar='modo_verboso' ,help="True para modo Verboso con impresiones de control.",nargs='?', default=False, type=bool)
+parser = argparse.ArgumentParser(description="Analizador Sintactico Predictivo de Pascal Reducido", epilog="Analizador Sintactico para Pascal Reducido desarrollado en Python para las materias de Diseño de Compiladores e Interpretes y Laboratorio de Compiladores e Interpretes. Facultad de Informatica - Universidad Nacional del Comahue. Distribuido bajo licencia GNUv3. https://github.com/Jmdelafuente22/CeI")
+parser.add_argument("archivo",help="Ruta relativa del fichero de tokens a analizar sintacticamente.", type=str)
+parser.add_argument("verbose_mode",help="True para modo Verboso con impresiones de control.",nargs='?', default=False, type=bool)
 args = parser.parse_args()
 
 ##Variables globales
@@ -25,14 +25,6 @@ args = parser.parse_args()
 global verbose
 verbose= args.verbose_mode
 
-
-#Letra
-global letras
-letras =  list(string.ascii_uppercase)
-
-#Numeros
-global digito
-digito = ['1','2','3','4','5','6','7','8','9','0']
 
 #Preanalisis procesado
 global preanalisis
@@ -57,88 +49,44 @@ palabrasReservadas=["begin","bool","end","while","true","false","if","else","pro
 
 
 #Definicion de casos posibles
-def letra():
-	if(verbose):
-		print("letra")
-	if((re.search(r"[a-z]",preanalisis)) and (preanalisis not in palabrasReservadas)):
-		match(preanalisis)
-	else:
-		reportar("Error de Sintaxis: se esperaba una letra",preanalisis,"letra")
 
 def digitos():
 	if(verbose):
 		print("digitos")
-	if(re.search(r"[0-9]",preanalisis)):
-		digito()
-		digitosRep()
-	elif (preanalisis == "-"):
-		match("-")
-		digito()
-		digitosRep()
+	if(preanalisis == "numero"):
+		match("numero")
+	elif (preanalisis == "operador_aritmetico"):
+		match("operador_aritmetico")
+                match("numero")
 	else:
-		reportar("Error de Sintaxis: se esperaba un digito o - ",preanalisis,"digitos")
-
-def digito():
-	if(verbose):
-		print("digito")
-	if(re.search(r"[0-9]",preanalisis)):
-		match(preanalisis)
-	else:
-		reportar("Error de Sintaxis: se esperaba un digito",preanalisis,"digito")
+		reportar("Error de Sintaxis: se esperaba un numero o - ",preanalisis,"digitos")
 
 
-def digitosRep():
-	if(verbose):
-		print("digitosRep")
-	if(re.search(r"[0-9]",preanalisis)):
-		digito()
-		digitosRep()
-	
 def identificador():
 	if(verbose):
 		print("identificador")
 	global preanalisis
-	if((re.search(r"[a-z]",preanalisis)) and (preanalisis not in palabrasReservadas)):
-		preanalisis = preanalisis[1:]
-		identificadorRep()
+	if(preanalisis == "identificador"):
+		match('identificador')
 	else:
 		reportar("Error de Sintaxis: se esperaba un identificador valido",preanalisis,"identificador")
                     
-def identificadorRep():
-	if(verbose):
-		print("identificadorRep")
-	global preanalisis
-	global tokens
-	global posicion
-	if(re.search(r"[a-z]",preanalisis)):
-		preanalisis = preanalisis[1:]
-		identificadorRep()
-	elif(re.search(r"[0-9]",preanalisis)):
-		preanalisis = preanalisis[1:]
-		identificadorRep()
-	elif(preanalisis==''):
-		posicion += 1
-		preanalisis = tokens[posicion]
-		
-
 def declaracionVariables():
 	if(verbose):
 		print("declaracionVariables")
 	if(preanalisis == 'var'):
 		match('var')
 		listaVariables()
-		match(';')
+		match('punto_coma')
 	else:
 		reportar("Error de Sintaxis: se esperaba VAR",preanalisis,"declaracionVariables")
-
 
 def listaVariables():
 	if(verbose):
 		print("listaVariable")
-	global letras
-	if((re.search(r"[a-z]",preanalisis)) and (preanalisis not in palabrasReservadas)):
+	if(preanalisis == "identificador"):
 		listaIdentificador()
-		match(":")
+		match("dos_puntos")
 		tipoVariables()
 	else:
 		reportar("Error de Sintaxis: se esperaba un identificador valido",preanalisis,"listaVariables")
@@ -147,7 +95,7 @@ def listaVariables():
 def listaIdentificador():
 	if(verbose):
 		print("listaIdentificador")
-	if((re.search(r"[a-z]",preanalisis)) and (preanalisis not in palabrasReservadas)):
+	if(preanalisis == "identificador"):
 		identificador()
 		listaIdentificadorRep()
 	else:
@@ -156,8 +104,8 @@ def listaIdentificador():
 def listaIdentificadorRep():
 	if(verbose):
 		print("listaIdentificadorRep")
-	if( preanalisis == ","): 
-		match(",")
+	if( preanalisis == "coma"): 
+		match("coma")
 		identificador()
 		listaIdentificadorRep()
 
@@ -179,7 +127,7 @@ def sentenciaCompuesta():
 		match("begin")
 		compuesta()
 		match("end")
-		match(";")
+		match("punto_coma")
 	else:
 		reportar("Error de Sintaxis: se esperaba BEGIN",preanalisis,"sentenciaCompuesta")
 
@@ -187,7 +135,7 @@ def compuesta():
 	if(verbose):
 		print("compuesta")
 	case1 = {'write','while','read','if'}
-	if (((re.search(r"[a-z]",preanalisis)) and (preanalisis not in palabrasReservadas)) or (preanalisis in case1)) :
+	if ((preanalisis == "identificador") or (preanalisis in case1)):
 		sentencia()
 		sentenciaOptativa()
 	elif (preanalisis == "begin"):
@@ -198,22 +146,22 @@ def compuesta():
 def sentenciaOptativa():
 	if(verbose):
 		print("sentenciaOptativa")
-	if(preanalisis == ";"):
-		match(";")
+	if(preanalisis == "punto_coma"):
+		match("punto_coma")
 		sentenciaOptativa2()
 
 def sentenciaOptativa2():
 	if(verbose):
 		print("sentenciaOptativa2")
 	case1 = {"begin",'write','while','read','if'}
-	if (((re.search(r"[a-z]",preanalisis)) and (preanalisis not in palabrasReservadas)) or (preanalisis in case1)) :
+	if ((preanalisis == "identificador") or (preanalisis in case1)):
 		compuesta()
 
 def no():
 	if(verbose):
 		print("not")
-	if(preanalisis == "not"):
-		match("not")
+	if(preanalisis == "operador_logico"):
+		match("operador_logico")
 		
 
 def sentencia():
@@ -225,13 +173,13 @@ def sentencia():
 		mientras()
 	elif(preanalisis == 'write'):
 		match("write")
-		match("(")
+		match("parentesis_a")
 		llamada2()
 	elif(preanalisis == "read"):
 		match("read")
-		match("(")
+		match("parentesis_a")
 		identificador()
-	elif((re.search(r"[a-z]",preanalisis)) and (preanalisis not in palabrasReservadas)):
+	elif(preanalisis == "identificador"):
 		identificador()
 		asignacionollamada()
 	else:
@@ -240,9 +188,9 @@ def sentencia():
 def asignacion():
 	if(verbose):
 		print("asignacion")
-	if((re.search(r"[a-z]",preanalisis)) and (preanalisis not in palabrasReservadas)):
+	if(preanalisis == identificador):
 		identificador()
-		match(":=")
+		match("punto_coma")
 		expresionGeneral()
 	else:
 		reportar("Error de Sintaxis: se esperaba un identificador valido",preanalisis,"asignacion")
@@ -251,11 +199,11 @@ def asignacion():
 def asignacionollamada():
 	if(verbose):
 		print("asignacionollamada")
-	if (preanalisis == ":="):
-		match(":=")
+	if (preanalisis == "asignacion"):
+		match("asignacion")
 		expresionGeneral()
-	elif (preanalisis == "("):
-		match("(")
+	elif (preanalisis == "parentesis_a"):
+		match("parentesis_a")
 		llamada1()
 	else:
 		reportar("Error de sintaxis: se esperaba := o (",preanalisis,"asignacionollamada")
@@ -264,8 +212,8 @@ def asignacionollamada():
 def expresionAritmetica():
 	if(verbose):
 		print("expresionAritmetica")
-	case1 = {"write","true","false","read","-"}
-	if (((re.search(r"[a-z]",preanalisis)) and (preanalisis not in palabrasReservadas)) or (re.search(r"[0-9]",preanalisis)) or (preanalisis in case1)) :
+	case1 = {"write","true","false","read","operador_aritmetico"}
+	if ((preanalisis == "identificador") or (preanalisis == "numero") or (preanalisis in case1)):
 		termino() 
 		expresionAritmetica1()
 	else:
@@ -274,62 +222,53 @@ def expresionAritmetica():
 def expresionAritmetica1():
 	if(verbose):
 		print("expresionAritmetica1")
-	if ( preanalisis == "+"):
-	  match("+")
+	if ( preanalisis == "operador_aritmetico"):
+	  match("operador_aritmetico")
 	  termino()
 	  expresionAritmetica1()
-	elif( preanalisis == "-"):
-	  match("-")
-	  termino()
-	  expresionAritmetica1()
+
 
 def termino():
 	if(verbose):
 		print("termino")
-	case1 = {"write","true","false","read","-"}
-	if(((re.search(r"[a-z]",preanalisis)) and (preanalisis not in palabrasReservadas)) or (re.search(r"[0-9]",preanalisis)) or (preanalisis in case1)) :
+	case1 = {"write","true","false","read","operador_aritmetico"}
+	if((preanalisis == "identificador") or (preanalisis == "numero") or (preanalisis in case1)):
 			factor()
 			termino1()
-	elif(preanalisis=='('):
-			match("(")
+	elif(preanalisis=='parentesis_a'):
+			match("parentesis_a")
 			expresionGeneral()
-			match(")")
+			match("parentesis_c")
 	else:
 			reportar("Error de Sintaxis: se esperaba WRITE,READ,TRUE,FALSE,Identificador valido o Digitos",preanalisis,"expresionAritmetica1")
 
 def termino1():
 	if(verbose):
 		print("termino1")
-	if (preanalisis == "*") :
-				match("*")
+	if (preanalisis == "operador_termino"):
+				match("operador_termino")
 				termino()
 				termino1()
-	elif (preanalisis == "/") :
-				match("/")
-				termino()
-				termino1()
-
-
 def factor():
 	if(verbose):
 		print("factor")
-	if ((re.search(r"[a-z]",preanalisis)) and (preanalisis not in palabrasReservadas)) :
+	if (preanalisis == "identificador"):
 				identificador()
 				factor1()
-	elif (preanalisis == "write") :
+	elif (preanalisis == "write"):
 				match("write")
-				match("(")
+				match("parentesis_a")
 				llamada2()
-	elif (preanalisis == "read") :
+	elif (preanalisis == "read"):
 				match("read")
-				match("(")
+				match("parentesis_a")
 				identificador()
-				match(")")
-	elif (re.search(r"[0-9]",preanalisis) or preanalisis == '-') :
+				match("parentesis_c")
+	elif (preanalisis == "numero" or preanalisis == "operador_aritmetico") :
 				digitos()
-	elif (preanalisis == "true") :
+	elif (preanalisis == "true"):
 				match("true")
-	elif (preanalisis == "false") :
+	elif (preanalisis == "false"):
 				match("false")
 	else:
 				reportar("Error de sintaxis: se esperaba WRITE,READ,TRUE,FALSE,DIGITO o Identificador valido",preanalisis,"factor")
@@ -337,32 +276,22 @@ def factor():
 def factor1():
 	if(verbose):
 		print("factor1")
-	if ( preanalisis == "(") :
-		match("(")
+	if ( preanalisis == "parentesis_a"):
+		match("parentesis_a")
 		llamada1()
 
 def operadorRelacional():
 	if(verbose):
 		print("operadorRelacional")
-	if ( preanalisis == "="):
-				match("=")
-	elif (preanalisis == "<>") :
-				match("<>")
-	elif (preanalisis == "<") :
-				match("<")
-	elif (preanalisis == "<=") :
-				match("<=")
-	elif (preanalisis == ">") :
-				match(">")
-	elif (preanalisis == ">=") :
-				match(">=")
+	if ( preanalisis == "operador_relacional"):
+				match("operador_relacional")
 	else:
 				reportar("Error de sintaxis: se esperaba un operador relacional <,<=,=>,>,<> o =",preanalisis,"operadorRelacional")
 				
 def programa():
 	if(verbose):
 		print("programa")
-	if ( preanalisis == "program") :
+	if ( preanalisis == "program"):
 			 match("program")
 			 identificador()
 			 declaracionVariableOpt()
@@ -370,7 +299,7 @@ def programa():
 			 match("begin")
 			 programaRepSentencia()
 			 match("end")
-			 match(".")
+			 match("punto")
 	else:
 			 reportar("Error de sintaxis: debe comenzar con la sentencia PROGRAM Identificador",preanalisis,"programa")
 
@@ -378,13 +307,13 @@ def programa():
 def declaracionVariableOpt():
 	if(verbose):
 		print("declaracionVariablesOpt")
-	if ( preanalisis == "var") :
+	if ( preanalisis == "var"):
 			 declaracionVariables()
 
 def programaRepPyf():
 	if(verbose):
 		print("programaRepPyf")
-	if (( preanalisis == "function") or (preanalisis == "procedure")) :
+	if (( preanalisis == "function") or (preanalisis == "procedure")):
 			 declaracionPyf()
 			 programaRepPyf()
 	
@@ -394,15 +323,15 @@ def programaRepSentencia():
 		print("programaRepSentencia")
 	global letras
 	caso1={"begin", "read", "write","while","if"}
-	if ( (preanalisis in caso1) or ((re.search(r"[a-z]",preanalisis)) and (preanalisis not in palabrasReservadas))) :
+	if ( (preanalisis in caso1) or (preanalisis == "identificador")):
 			 compuesta()
 			 programaRepSentencia()
 	
 def expresionGeneral():
 	if(verbose):
 		print("expresionGeneral")
-	caso1={'false', 'true', '(', '-', 'write', 'read', 'not'}
-	if(((re.search(r"[a-z]",preanalisis)) and (preanalisis not in palabrasReservadas)) or (re.search(r"[0-9]",preanalisis)) or preanalisis in caso1):
+	caso1={'false', 'true', 'parentesis_a', 'operador_aritmetico', 'write', 'read', 'operador_logico'}
+	if((preanalisis == "identificador") or (preanalisis == "numero") or (preanalisis in caso1)):
 		compararAnd()
 		expresionGeneral1()
 	else:
@@ -411,22 +340,22 @@ def expresionGeneral():
 def expresionGeneral1():
 	if(verbose):
 		print("expresionGeneral1")
-	if(preanalisis == "or"):
-		match("or")
+	if(preanalisis == "operador_logico"):
+		match("operador_logico")
 		compararAnd()
 		expresionGeneral1()
 
 def compararAnd():
 	if(verbose):
 		print("compararAnd")
-	caso2={'false', 'true', '-', 'write', 'read'}
-	if(preanalisis == "not" or preanalisis== "("):
+	caso2={'false', 'true', 'operador_aritmetico', 'write', 'read'}
+	if(preanalisis == "operador_logico" or preanalisis== "parentesis_a"):
 		no()
-		match("(")
+		match("parentesis_a")
 		expresionGeneral()
-		match(")")
+		match("parentesis_c")
 		compararAnd1()
-	elif (((re.search(r"[a-z]",preanalisis)) and (preanalisis not in palabrasReservadas)) or re.search(r"[0-9]",preanalisis) or preanalisis in caso2):
+	elif ((preanalisis == "identificador" or preanalisis == "numero" ) or (preanalisis in caso2)):
 		expresionAritmetica() 
 		expresionAritmetica2() 
 		compararAnd1()
@@ -436,23 +365,22 @@ def compararAnd():
 def expresionAritmetica2():
 	if(verbose):
 		print("expresionAritmetica2")
-	caso1={'<', '<=', '=', '>', '>=', '<>'}
-	if(preanalisis  in caso1 ):
+	if(preanalisis  == "operador_relacional"):
 		operadorRelacional()
 		expresionAritmetica()
 
 def compararAnd1():
 	if(verbose):
 		print("compararAnd1")
-	if(preanalisis == "and"):
-		match("and")
+	if(preanalisis == "operador_logico"):
+		match("operador_logico")
 		compararAnd()
 
 
 def ifthen():
 	if(verbose):
 		print("ifthen")
-	if ( preanalisis == "if") :
+	if ( preanalisis == "if"):
 			 match("if")
 			 expresionGeneral()
 			 match("then")
@@ -464,14 +392,14 @@ def ifthen1():
 	if(verbose):
 		print("ifthen1")
 	caso2={"read", "write","while","if"}
-	if ( preanalisis == "begin") :
+	if ( preanalisis == "begin"):
 			 match("begin")
 			 compuesta()
 			 match("end")
 			 alternativa()
-	elif ((preanalisis in caso2) or ((re.search(r"[a-z]",preanalisis)) and (preanalisis not in palabrasReservadas))):
+	elif ((preanalisis in caso2) or (preanalisis == "identificador")):
 			 sentencia()
-			 match(";")
+			 match("punto_coma")
 	else: 
 			 reportar("Error de sintaxis: se esperaba WRITE,READ,WHILE,IF,BEGIN o Identificador valido",preanalisis,"ifthen1")
 
@@ -479,8 +407,8 @@ def alternativa():
 	if(verbose):
 		print("alternativa")
 	global letras
-	if  (preanalisis == ";"):
-			 match(";")
+	if  (preanalisis == "punto_coma"):
+			 match("punto_coma")
 	elif (preanalisis == "else"):
 			 match("else")
 			 compuesta()
@@ -490,7 +418,7 @@ def alternativa():
 def mientras():
 	if(verbose):
 		print("mientras")
-	if ( preanalisis == "while") :
+	if ( preanalisis == "while"):
 			 match("while")
 			 expresionGeneral()
 			 match("do")
@@ -501,25 +429,25 @@ def mientras():
 def declaracionPyf():
 	if(verbose):
 		print("declaracionPyf")
-	if ( preanalisis == "procedure") :
+	if ( preanalisis == "procedure"):
 			 match("procedure")
 			 identificador()
-			 match("(")
+			 match("parentesis_a")
 			 parametrosRep()
-			 match(")")
-			 match(";")
+			 match("parentesis_c")
+			 match("punto_coma")
 			 declaracionVariableOpt()
 			 declaracionPyfRep()
 			 sentenciaCompuesta()
-	elif ( preanalisis == "function") :
+	elif ( preanalisis == "function"):
 			 match("function")
 			 identificador()
-			 match("(")
+			 match("parentesis_a")
 			 parametrosRep()
-			 match(")")
-			 match(":")
+			 match("parentesis_c")
+			 match("dos_punto")
 			 tipoVariables()
-			 match(";")
+			 match("punto_coma")
 			 declaracionVariableOpt()
 			 declaracionPyfRep()
 			 sentenciaCompuesta()
@@ -529,7 +457,7 @@ def declaracionPyf():
 def parametrosRep():
 	if(verbose):
 		print("parametrosRep")
-	if ( (re.search(r"[a-z]",preanalisis)) and (preanalisis not in palabrasReservadas)) :
+	if ( preanalisis == "identificador"):
 		listaVariables()
 		parametrosFormalesRep()	 
 
@@ -537,13 +465,13 @@ def parametrosRep():
 def declaracionVariablesRep():
 	if(verbose):
 		print("declaracionVariablesRep")
-	if ( preanalisis == "var") :
+	if ( preanalisis == "var"):
 			 declaracionVariables()
 
 def declaracionPyfRep():
 	if(verbose):
 		print("declaracionPyfRep")
-	if ( preanalisis == "function" or preanalisis == "procedure") :
+	if ( preanalisis == "function" or preanalisis == "procedure"):
 			 declaracionPyf()
 			 declaracionPyfRep()
 	
@@ -551,24 +479,24 @@ def declaracionPyfRep():
 def parametrosFormalesRep():
 	if(verbose):
 		print("parametrosFormalesRep")
-	if ( preanalisis == ",") :
-			 match(",")
+	if ( preanalisis == "coma"):
+			 match("coma")
 			 listaVariables()
 			 parametrosFormalesRep()
 
 def parametrosReales():
 	if(verbose):
 		print("parametrosReales")
-	caso1={'false', 'true', '(', '-', 'write', 'read', 'not'}
-	if(((re.search(r"[a-z]",preanalisis)) and (preanalisis not in palabrasReservadas)) or (re.search(r"[0-9]",preanalisis)) or preanalisis in caso1):
+	caso1={'false', 'true', 'parentesis_a', 'operador_aritmetico', 'write', 'read', 'operador_logico'}
+	if(preanalisis == "identificador") or (preanalisis == "numero") or (preanalisis in caso1):
 			 expresionGeneral()
 			 parametrosRealesRep()
 
 def parametrosRealesRep():
 	if(verbose):
 		print("parametrosRealesRep")
-	if ( preanalisis == ",") :
-			 match(",")
+	if ( preanalisis == "coma"):
+			 match("coma")
 			 expresionGeneral()
 			 parametrosRealesRep()
 
@@ -576,19 +504,19 @@ def llamadaProcedimiento():
 	if(verbose):
 		print("llamadaProcedimiento")
 	global letras
-	if ( preanalisis == "write") :
+	if ( preanalisis == "write"):
 			 match("write")
-			 match("(")
+			 match("parentesis_a")
 			 llamada2()
 			 #parametrosRealesRep()
-	elif ( preanalisis == "read") :
+	elif ( preanalisis == "read"):
 			 match("read")
-			 match("(")
+			 match("parentessis_a")
 			 identificador()
-			 match(")")
-	elif ( (re.search(r"[a-z]",preanalisis)) and (preanalisis not in palabrasReservadas)):
+			 match("parentesis_c")
+	elif ( preanalisis == "identificador"):
 			 identificador()
-			 match("(")
+			 match("parentesis_a")
 			 llamada1()
 	else:
 			 reportar("Error de sintaxis: se esparaba llamada a Procedimiento o Funcion",preanalisis,"llamadaProcedimiento")
@@ -597,13 +525,13 @@ def llamada1():
 	if(verbose):
 		print("llamada1")
 	global letras
-	caso2={'false', 'true', '(', '-', 'write', 'read', 'not'}
-	if ( preanalisis == ")") :
-			 match(")")
-	elif(((re.search(r"[a-z]",preanalisis)) and (preanalisis not in palabrasReservadas)) or (re.search(r"[0-9]",preanalisis)) or preanalisis in caso2):
+	caso2={'false', 'true', 'parentesis_a', 'operador_aritmetico', 'write', 'read', 'operador_logico'}
+	if ( preanalisis == "parentesis_c"):
+			 match("parentesis_c")
+	elif((preanalisis == "identificador") or (preanalisis == "numero") or preanalisis in caso2):
 			 parametrosReales()
 			 parametrosReales2()
-			 match(")")
+			 match("parentesis_c")
 	else:
 			 reportar("Error de sintaxis: se esperaba WRITE,READ,NOT,TRUE,FALSE,(,-,Digito o Identificador Valido",preanalisis,"llamada1")
 
@@ -611,12 +539,12 @@ def llamada2():
 	if(verbose):
 		print("llamada2")
 	global letras
-	if ( (re.search(r"[a-z]",preanalisis)) and (preanalisis not in palabrasReservadas)) :
+	if ( (preanalisis == "identificador")):
 			 identificador()
-			 match(")")
-	elif ( re.search(r"[0-9]",preanalisis) or preanalisis == "-") :
+			 match("parentesis_c")
+	elif ( preanalisis == "identificador") or (preanalisis == "operador_aritmetico"):
 			 digitos()
-			 match(")")
+			 match("parentecis_c")
 	else:
 			 reportar("Error de sintaxis: se esperaba Digitos o un Identificador Valido",preanalisis,"llamada2")
 
@@ -624,12 +552,12 @@ def llamada2():
 def parametrosReales2():
 	if(verbose):
 		print("parametrosReales2")
-	if ( preanalisis == ",") :
-			 match(",")
+	if ( preanalisis == "coma"):
+			 match("coma")
 			 parametrosReales()
 			 parametrosReales2()
 
-#Procedimiento Match dado en la teoría
+#Procedimiento Match dado en la teoria
 def match(t):
 	global tokens
 	global posicion
@@ -671,8 +599,8 @@ archivo += ".tokens"
 numeroLinea=1
 with open(archivo) as f:
     for line in f:
-		linea = between(line,' ','\n')
-		linea = linea[1:-2]
+		linea = between(line,'[',',')
+		linea = linea[1:-1]
 		if(linea != ''):
 			tokens.append(linea.lower())
 f.close()

@@ -5,6 +5,7 @@ import string
 import random
 #import sys
 import argparse
+import os
 
 #Authors: Bonet Peinado Daiana, de la Fuente Juan M.
 #Year: 2018
@@ -531,6 +532,7 @@ if(error):
         print "ERRORES DETECTADOS EN ANALISIS LEXICO: "+ repr(len(error))
         for e in error:
                 print e
+        os.system('kill %d' % os.getpid())
 else:
         print "Analisis lexico finalizado. No hay errores detectados"
 
