@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# coding=utf-8
 
 import string
 import random
@@ -55,7 +56,8 @@ def q0(x):
 	        ':': 'q23',
                 '\n': 'q0',
                 ' ':  'q0',
-                '\t': 'q0'
+                '\t': 'q0',
+                ',': 'q27'
 	}
         
         cadena = cadena + x
@@ -253,7 +255,9 @@ def q15(x):
         global state
 
         cadena = cadena[:-1]
-        if(cadena.upper() in palabrasReservadas):
+        if(cadena.upper() in operadoresLogicos):
+                tokens.append(["OPERADOR_LOGICO",cadena])
+        elif(cadena.upper() in palabrasReservadas):
                 tokens.append([cadena.upper(),cadena])
         else:
         #        global tokens
@@ -376,9 +380,21 @@ def q26(x):
         state = 'q0'
         global cadena
         cadena = cadena[:-1]
-        tokens.append(["DECLARACION",cadena])        
+        tokens.append(["DOS_PUNTOS",cadena])        
         cadena = ""
         return ret
+
+def q27(x):
+        ret = 1
+	global state
+        state = 'q0'
+        global cadena
+        cadena = cadena[:-1]
+        tokens.append(["COMA",cadena])        
+        cadena = ""
+        return ret
+
+
 
 
 def process(line,nroLinea):
@@ -451,8 +467,8 @@ cadena=""
 
 #Palabras reservadas
 global palabrasReservadas
-palabrasReservadas=["BEGIN","BOOL","END","WHILE","TRUE","FALSE","IF","ELSE","PROGRAM","DO","THEN","AND","OR","FUNCTION","INTEGER","PROCEDURE","READ","VAR","WRITE"]
-
+palabrasReservadas=["BEGIN","BOOLEAN","END","WHILE","TRUE","FALSE","IF","ELSE","PROGRAM","DO","THEN","FUNCTION","INTEGER","PROCEDURE","READ","VAR","WRITE"]
+operadoresLogicos = ["AND","OR","NOT"]
 #Definicion de estados posibles
 global estados
 estados = {

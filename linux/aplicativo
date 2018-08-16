@@ -10,13 +10,15 @@ import sys
 
 parser = argparse.ArgumentParser(description="Compilador de Pascal Reducido", epilog="Compilador para Pascal Reducido desarrollado en Python para las materias de Diseño de Compiladores e Interpretes y Laboratorio de Compiladores e Interpretes. \n Facultad de Informatica - Universidad Nacional del Comahue. \n Distribuido bajo licencia GNUv3. https://github.com/Jmdelafuente22/CeI")
 parser.add_argument("archivo", metavar='archivo' ,help="Ruta relativa del fichero a analizar sintacticamente.", type=str)
-parser.add_argument("verbose_mode", metavar='modo_verboso' ,help="True para modo Verboso con impresiones de control.",nargs='?', default=False, type=bool)
+parser.add_argument("verbose_mode",help="True para modo Verboso con impresiones de control.",nargs='?', default=False, type=str)
 args = parser.parse_args()
 
+archivo= args.archivo
+verboso= args.verbose_mode
 
 #Llamada al analizador Lexico
-sys.argv = ['analizadorLexico.py',args.archivo, args.verbose_mode]
+sys.argv = ['analizadorLexico.py',archivo,verboso]
 execfile('analizadorLexico.py')
 #LLamada al analizador Sintactico
-sys.argv = ['analizadorSintactico.py',args.archivo, args.verbose_mode]
+sys.argv = ['analizadorSintactico.py',archivo,verboso]
 execfile('analizadorSintactico.py')
