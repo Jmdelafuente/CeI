@@ -235,10 +235,10 @@ def termino():
 	if((preanalisis == "identificador") or (preanalisis == "numero") or (preanalisis in case1)):
 			factor()
 			termino1()
-	elif(preanalisis=='parentesis_a'):
-			match("parentesis_a")
-			expresionGeneral()
-			match("parentesis_c")
+	#elif(preanalisis=='parentesis_a'):
+	#		match("parentesis_a")
+	#		expresionGeneral()
+	#		match("parentesis_c")
 	else:
 			reportar("Error de Sintaxis: se esperaba WRITE,READ,TRUE,FALSE,Identificador valido o Digitos",preanalisis,"expresionAritmetica1")
 
@@ -354,6 +354,7 @@ def compararAnd():
 		match("parentesis_a")
 		expresionGeneral()
 		match("parentesis_c")
+                termino1()
 		compararAnd1()
 	elif ((preanalisis == "identificador" or preanalisis == "numero" ) or (preanalisis in caso2)):
 		expresionAritmetica() 
@@ -564,6 +565,8 @@ def match(t):
 	global preanalisis
 	
 	if(preanalisis == t):
+                if(verbose):
+                        print(">Match:"+preanalisis)        
 		posicion += 1
 		if(posicion < len(tokens)):
 			preanalisis = tokens[posicion]
