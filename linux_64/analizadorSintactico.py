@@ -231,7 +231,7 @@ def expresionAritmetica1():
 def termino():
 	if(verbose):
 		print("termino")
-	case1 = {"write","true","false","read","operador_aritmetico"}
+	case1 = {"write","true","false","read","operador_aritmetico","parentesis_a"}
 	if((preanalisis == "identificador") or (preanalisis == "numero") or (preanalisis in case1)):
 			factor()
 			termino1()
@@ -247,7 +247,7 @@ def termino1():
 		print("termino1")
 	if (preanalisis == "operador_termino"):
 				match("operador_termino")
-				termino()
+				factor()
 				termino1()
 def factor():
 	if(verbose):
@@ -270,6 +270,10 @@ def factor():
 				match("true")
 	elif (preanalisis == "false"):
 				match("false")
+        elif (preanalisis == "parentesis_a"):
+                                match("parentesis_a")
+                                expresionAritmetica()
+                                match("parentesis_c")
 	else:
 				reportar("Error de sintaxis: se esperaba WRITE,READ,TRUE,FALSE,DIGITO o Identificador valido",preanalisis,"factor")
 
