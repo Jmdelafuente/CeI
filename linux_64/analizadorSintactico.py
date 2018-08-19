@@ -57,7 +57,7 @@ def digitos():
 		match("numero")
 	elif (preanalisis == "operador_aritmetico"):
 		match("operador_aritmetico")
-                match("numero")
+		match("numero")
 	else:
 		reportar("Error de Sintaxis: se esperaba un numero o - ",preanalisis,"digitos")
 
@@ -325,7 +325,7 @@ def programaRepSentencia():
 def expresionGeneral():
 	if(verbose):
 		print("expresionGeneral")
-	caso1={'false', 'true', 'parentesis_a', 'operador_aritmetico', 'write', 'read','not'}
+	caso1={'false', 'true', 'parentesis_a', 'operador_aritmetico', 'write', 'read','not'}#,'and'}
 	if((preanalisis == "identificador") or (preanalisis == "numero") or (preanalisis in caso1)):
 		compararAnd()
 		expresionGeneral1()
@@ -344,14 +344,14 @@ def compararAnd():
 	if(verbose):
 		print("compararAnd")
 	caso2={'false', 'true', 'operador_aritmetico', 'write', 'read', 'parentesis_a','not'}
-	if(preanalisis == "and"): #or preanalisis== "parentesis_a"):
+	#if(preanalisis == "and"): #or preanalisis== "parentesis_a"):
 		#no()
 	#	match("parentesis_a")
 	#	expresionGeneral()
 	#	match("parentesis_c")
      #           termino1()
-		compararAnd1()
-	elif ((preanalisis == "identificador" or preanalisis == "numero" ) or (preanalisis in caso2)):
+	#	compararAnd1()
+	if ((preanalisis == "identificador" or preanalisis == "numero" ) or (preanalisis in caso2)):
 		no()
 		expresionAritmetica() 
 		expresionAritmetica2() 
