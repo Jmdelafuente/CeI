@@ -257,7 +257,7 @@ def q15(x):
 
         cadena = cadena[:-1]
         if(cadena.upper() in operadoresLogicos):
-                tokens.append(["OPERADOR_LOGICO",cadena])
+                tokens.append([cadena.upper(),cadena])
         elif(cadena.upper() in palabrasReservadas):
                 tokens.append([cadena.upper(),cadena])
         else:
