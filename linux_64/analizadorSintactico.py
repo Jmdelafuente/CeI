@@ -185,16 +185,6 @@ def sentencia():
 	else:
 		reportar("Error de Sintaxis: se esperaba READ, WRITE, IF, WHILE o Identificador Valido",preanalisis,"sentencia")
 
-def asignacion():
-	if(verbose):
-		print("asignacion")
-	if(preanalisis == identificador):
-		identificador()
-		match("punto_coma")
-		expresionGeneral()
-	else:
-		reportar("Error de Sintaxis: se esperaba un identificador valido",preanalisis,"asignacion")
-
 
 def asignacionollamada():
 	if(verbose):
