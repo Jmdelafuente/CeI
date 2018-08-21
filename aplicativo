@@ -1,4 +1,0 @@
-#!/bin/bash
-python analizador.py $1 $2 &
-wait
-python analizadorSintactico.py $1 $2
