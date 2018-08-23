@@ -289,6 +289,7 @@ def programa():
 	if ( preanalisis == "program"):
 			 match("program")
 			 identificador()
+			 match("punto_coma")
 			 declaracionVariableOpt()
 			 programaRepPyf()
 			 match("begin")
@@ -613,7 +614,7 @@ if(posicion < len(tokens)):
 	if(verbose):
 		print("-------->TRAZA DE EJECUCION DE LA GRAMATICA:")
 	programa()
-	print("Fin de la ejecucion")
+	print("Analisis Finalizado. Sin errores detectados")
 #Salida de Tokens
 if(args.verbose_mode):
         print tokens

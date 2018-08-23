@@ -22,7 +22,9 @@ verbose= args.verbose_mode
 
 #Preanalisis procesado
 global preanalisis
+global preanalisisAnterior
 preanalisis=""
+preanalisisAnterior=""
 
 #Posicion del token analizado
 global posicion
@@ -34,7 +36,6 @@ global palabrasReservadas
 palabrasReservadas=["begin","bool","end","while","true","false","if","else","program","do","then","and","or","function","integer","procedure","read","var","write"]
 
 
-#Definicion de casos posibles
 #Definicion de casos posibles
 
 def digitos():
@@ -166,7 +167,6 @@ def sentencia():
 		match("read")
 		match("parentesis_a")
 		identificador()
-		match("parentesis_c")
 	elif(preanalisis == "identificador"):
 		identificador()
 		asignacionollamada()
@@ -431,7 +431,7 @@ def declaracionPyf():
 		match("parentesis_a")
 		parametrosRep()
 		match("parentesis_c")
-		match("dos_puntos")
+		match("dos_punto")
 		tipoVariables()
 		match("punto_coma")
 		declaracionVariableOpt()
@@ -530,7 +530,7 @@ def llamada2():
 		match("parentesis_c")
 	elif ( preanalisis == "identificador") or (preanalisis == "operador_aritmetico"):
 		digitos()
-		match("parentesis_c")
+		match("parentecis_c")
 	else:
 		reportar("Error de sintaxis: se esperaba Digitos o un Identificador Valido",preanalisis,"llamada2")
 
@@ -542,28 +542,31 @@ def parametrosReales2():
 		match("coma")
 		parametrosReales()
 		parametrosReales2()
-
 #Procedimiento Match dado en la teoria
 def match(t):
 	global tokens
 	global posicion
 	global preanalisis
+	global preanalisisAnterior
+	
 	if(preanalisis == t):
 		if(verbose):
 			print(">Match:"+preanalisis)        
 		posicion += 1
 		if(posicion < len(tokens)):
 			if(args.standalone):
+				preanalisisAnterior = preanalisis
 				preanalisis = tokens[posicion]
 			else:
+				preanalisisAnterior = preanalisis
 				preanalisis = siguientePreanalisis()
 	else:
-		reportarMatch("["+repr(nroLinea)+"] "+"Error de sintaxis, no se esperaba ",preanalisis,tokens[posicion-1][0].lower(),"match")
+		reportarMatch("["+repr(nroLinea)+"] "+"Error de sintaxis, no se esperaba ",preanalisis,preanalisisAnterior,"match")
 		
 def reportar(tipoError,simbolo,metodo):
 	global error
-	
-	err = "["+repr(nroLinea)+"] "+tipoError+ " en la expresion "+ repr(preanalisis)+" despues de "+ tokens[posicion-1][0].lower() +" .Por favor revise la definicion de "+ metodo +"\n"
+	global preanalisisAnterior
+	err = "["+repr(nroLinea)+"] "+tipoError+ " en la expresion "+ repr(preanalisis)+" despues de "+ preanalisisAnterior +" .Por favor revise la definicion de "+ metodo +"\n"
 	if(args.standalone):
 		print err
 		exit(0)
@@ -601,7 +604,7 @@ def between(value, a, b):
 def main():
 	#Error
 	global error
-	error=[]
+	#error=[]
 
 	#Tokens
 	global tokens
