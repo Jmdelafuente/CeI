@@ -289,6 +289,7 @@ def programa():
 	if ( preanalisis == "program"):
 			 match("program")
 			 identificador()
+			 match("punto_coma")
 			 declaracionVariableOpt()
 			 programaRepPyf()
 			 match("begin")
