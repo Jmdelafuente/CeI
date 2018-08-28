@@ -614,7 +614,7 @@ if(posicion < len(tokens)):
 	if(verbose):
 		print("-------->TRAZA DE EJECUCION DE LA GRAMATICA:")
 	programa()
-	print("Fin de la ejecucion")
+	print("Analisis Finalizado. Sin errores detectados")
 #Salida de Tokens
 if(args.verbose_mode):
         print tokens

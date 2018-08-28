@@ -33,48 +33,44 @@ def q0(x):
 		
 	entrada={
 		'{': 'q1',
-	        'numero': 'q2',
-	        ']': 'q5',
-	        '[': 'q4',
-	        '<': 'q6',
-	        '>': 'q10',
-	        ';': 'q13',
+		'numero': 'q2',
+		']': 'q5',
+		'[': 'q4',
+		'<': 'q6',
+		'>': 'q10',
+		';': 'q13',
 		'=': 'q25',
-	        'letra': 'q14',
-                '_': 'q14',
-	        '+': 'q16',
-	        '-': 'q17',
-	        '*': 'q18',
-	        '/': 'q19',
-	        '.': 'q20',
-	        '(': 'q21',
-	        ')': 'q22',
-	        ':': 'q23',
-                '\n': 'q0',
-                ' ':  'q0',
-                '\t': 'q0',
-                ',': 'q27'
+		'letra': 'q14',
+		'_': 'q14',
+		'+': 'q16',
+		'-': 'q17',
+		'*': 'q18',
+		'/': 'q19',
+		'.': 'q20',
+		'(': 'q21',
+		')': 'q22',
+		':': 'q23',
+		'\n': 'q0',
+		' ':  'q0',
+		'\t': 'q0',
+		',': 'q27'
 	}
-        
-        cadena = cadena + x
+	cadena = cadena + x
 	state = entrada[ch]
-
-        if(state=='q0'):
+	if(state=='q0'):
 		cadena=""
 	return ret
 
 def q1(x):
-        ret = 0
-        global bandera
-        global state
-		
+    ret = 0
+    global bandera
+    global state
 	if(x=='}'):
-		
 		bandera = False
 		state='q0' 
 	else: 
 		#global state
-                state = 'q1'
+        state = 'q1'
 		#global bandera
 		bandera = True
         
@@ -88,116 +84,115 @@ def q2(x):
 	if(x in numeros):
 		state = 'q2'
 	else:
-                ret = 1
-                state = 'q3'
+        ret = 1
+        state = 'q3'
         cadena = cadena + x
         return ret
                 
 def q3(x):
-        ret = 1
+    ret = 1
 	global state
-        global cadena
+    global cadena
         
-        state = 'q0'
-        cadena = cadena[:-1]
-        tokens.append(["NUMERO",cadena,nroLinea])        
-        cadena = ""
-        return ret
+    state = 'q0'
+    cadena = cadena[:-1]
+    tokens.append(["NUMERO",cadena,nroLinea])        
+    cadena = ""
+    return ret
 
 def q4(x):
-        ret = 1
+    ret = 1
 	global state
-        global cadena
+    global cadena
         
-        state = 'q0'
-        cadena = ""
-        tokens.append(["CORCHETE_A",x,nroLinea])        
-        return ret
+    state = 'q0'
+    cadena = ""
+    tokens.append(["CORCHETE_A",x,nroLinea])        
+    return ret
 
 def q5(x):
-        ret = 1
+    ret = 1
 	global state
-        global cadena
+    global cadena
         
-        state = 'q0'
-        cadena = ""
-        tokens.append(["CORCHETE_C",x,nroLinea])        
-        return ret
+    state = 'q0'
+    cadena = ""
+    tokens.append(["CORCHETE_C",x,nroLinea])        
+    return ret
 
 def q6(x):
-        ret = 0
+    ret = 0
 	global cadena
-        global state
+    global state
         
-        cadena = cadena + x
-        entrada={
-                '=' : 'q8',
-                '>' : 'q9'
-        }
-        try:
-                state= entrada[x]
+    cadena = cadena + x
+    entrada={
+		'=' : 'q8',
+        '>' : 'q9'
+    }
+    try:
+		state= entrada[x]
         except KeyError:
-                ret = 1
-                state='q7'
+        ret = 1
+        state='q7'
                 
-        return ret
+    return ret
 
 def q7(x):
-        ret = 1
+    ret = 1
 	global state
-        state = 'q0'
-        global cadena
-        cadena = cadena[:-1]
-        tokens.append(["OPERADOR_RELACIONAL",cadena,nroLinea])        
-        cadena = ""
-        return ret
+    state = 'q0'
+    global cadena
+    cadena = cadena[:-1]
+    tokens.append(["OPERADOR_RELACIONAL",cadena,nroLinea])        
+    cadena = ""
+    return ret
 
 def q8(x):
-        ret = 1
+    ret = 1
 	global state
-        global cadena
+    global cadena
         
-        state = 'q0'
-        tokens.append(["OPERADOR_RELACIONAL",cadena,nroLinea])        
-        cadena = ""
-        return ret
+    state = 'q0'
+    tokens.append(["OPERADOR_RELACIONAL",cadena,nroLinea])        
+    cadena = ""
+    return ret
 
 def q9(x):
-        ret = 1
-        global cadena
-        global state
-        state = 'q0'
-        tokens.append(["OPERADOR_RELACIONAL",cadena,nroLinea])        
-        cadena = ""
-        return ret
+    ret = 1
+    global cadena
+    global state
+    state = 'q0'
+    tokens.append(["OPERADOR_RELACIONAL",cadena,nroLinea])        
+    cadena = ""
+    return ret
 
 def q10(x):
-        ret = 0
+    ret = 0
 	global cadena
-        global state
+    global state
         
-        cadena = cadena + x
-        entrada={
-                '=' : 'q12'
-        }
-        try:
-                state = entrada[x]
-        except KeyError:
-                ret = 1
-                state = 'q11'
+    cadena = cadena + x
+    entrada={
+		'=' : 'q12'
+    }
+    try:
+		state = entrada[x]
+    except KeyError:
+		ret = 1
+        state = 'q11'
                 
-        return ret
+    return ret
 
 def q11(x):
-        ret = 1
-        global cadena
-        global state
-        
-        cadena = cadena[:-1]
-        tokens.append(["OPERADOR_RELACIONAL",cadena,nroLinea])
-        cadena =""
-        state ='q0'
-        return ret
+    ret = 1
+    global cadena
+    global state
+    cadena = cadena[:-1]
+    tokens.append(["OPERADOR_RELACIONAL",cadena,nroLinea])
+    cadena =""
+    state ='q0'
+    return ret
 
 def q12(x):
         global state
@@ -226,23 +221,21 @@ def q14(x):
         
         if(x in letras):
 		char = 'letra'
-	elif(x in numeros):
-		char = 'numero'
-	else:
-		char = x
-	
-        entrada={
+		elif(x in numeros):
+			char = 'numero'
+		else:
+			char = x
+	    entrada={
 		'numero': 'q14',
-	        'letra': 'q14',
-	}
+	    'letra': 'q14',
+		}
         try:
-
-                state = entrada[char]
-        except KeyError:
-                state = 'q15'
-                ret = 1
-        cadena = cadena + x
-	return ret
+			state = entrada[char]
+		except KeyError:
+			state = 'q15'
+            ret = 1
+			cadena = cadena + x
+		return ret
 
 def q15(x):
         ret = 1
@@ -573,6 +566,7 @@ def siguientePreanalisis():
 	if(len(tokens)):
 		t = (tokens.pop(0))
 		nroLinea = t[2]
+		print "--------------->"+t[0]
 		return t[0].lower()
 	else:
 		return "EOF"
