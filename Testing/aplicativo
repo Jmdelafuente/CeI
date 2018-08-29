@@ -16,18 +16,26 @@ args = parser.parse_args()
 
 archivo= args.archivo
 verboso= args.verbose_mode
+standalone = args.standalone
 
-#Llamada al analizador Lexico
+#Llamada para lanzar el analizador Lexico
 if(verboso):
 	sys.argv = ['analizadorLexico.py',archivo,'-v']
 else:
 	sys.argv = ['analizadorLexico.py',archivo]
+
+if(standalone):
+	sys.argv.append('-s')
+
+
 execfile('analizadorLexico.py')
-#print tokens
-#LLamada al analizador Sintactico
+#LLamada para lanzar el analizador Sintactico
 if(verboso):
 	sys.argv = ['analizadorSintactico.py',archivo,'-v']
 else:
 	sys.argv = ['analizadorSintactico.py',archivo]
+
+if(standalone):
+	sys.argv.append('-s')
 
 execfile('analizadorSintactico.py')

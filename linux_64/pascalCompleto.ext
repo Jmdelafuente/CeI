@@ -4,9 +4,9 @@ var
 {Comentario seguramente util y perspicaz}
 a,b : integer;
 d:integer;
+e:boolean;
 
-
-procedure funcion ();
+procedure funcion;
 var
 a : integer;
 begin
@@ -15,14 +15,13 @@ end;
 
 
 BEGIN
+{funcion;}
 b:=3+b>6 or (2<>c) and c<4;
-{b and false;
-if not(a > b) THEN
-begin
+e:=b and false;
+{if not(a > b) THEN
 	c := true or false
-end
 else
-noidentado();}
+noidentado;}
 
 
 END.

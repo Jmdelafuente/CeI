@@ -1,10 +1,11 @@
 PROGRAM prueba;
 var
-
 {Comentario seguramente util y perspicaz}
-a : integer;
+a,b : integer;
+c : boolean;
+d : boolean;
 
-procedure funcion ();
+procedure funcion;
 var
 a : integer;
 begin
@@ -13,14 +14,12 @@ end;
 
 
 BEGIN
-b:=3+b>6 or (2<>c) and c<4;
-{b and false;
+b:=3+b>6 or (2<>c and c<4);
+d:=b and false;
 if not(a > b) THEN
-begin
 	c := true or false
-end
 else
-noidentado();}
+noidentado;
 
 
 END.

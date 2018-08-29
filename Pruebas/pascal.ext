@@ -12,11 +12,11 @@ end;
 
 
 BEGIN
-b:=-10003;
+b:=8*(-10003*8 *8)/2+3;
 {b and false;}
 if not(a > b) THEN
 begin
-	c := true or false
+	c := not(true and false)
 end
 else
 noidentado();

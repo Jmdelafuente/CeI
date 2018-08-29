@@ -10,38 +10,28 @@ import string
 import random
 import argparse
 import re
+import os
+from analizadorLexico import siguientePreanalisis
 
-
-#Definicion de argumentos y pasaje de parametros.
-
-parser = argparse.ArgumentParser(description="Analizador Sintactico Predictivo de Pascal Reducido", epilog="Analizador Sintactico para Pascal Reducido desarrollado en Python para las materias de Diseño de Compiladores e Interpretes y Laboratorio de Compiladores e Interpretes. Facultad de Informatica - Universidad Nacional del Comahue. Distribuido bajo licencia GNUv3. https://github.com/Jmdelafuente22/CeI")
-parser.add_argument("archivo",help="Ruta relativa del fichero de tokens a analizar sintacticamente.", type=str)
-parser.add_argument("verbose_mode",help="True para modo Verboso con impresiones de control.",nargs='?', default=False, type=bool)
-args = parser.parse_args()
 
 ##Variables globales
 
 #Bandera de modo verboso
 global verbose
-verbose= args.verbose_mode
+
 
 
 #Preanalisis procesado
 global preanalisis
+global preanalisisAnterior
 preanalisis=""
+preanalisisAnterior=""
 
 #Posicion del token analizado
 global posicion
 posicion=0
 
-#Error
-global error
-error=[]
-
-#Tokens
-global tokens
-tokens=[]
-
+#global nroLinea
 
 #Palabras reservadas
 global palabrasReservadas
@@ -77,19 +67,27 @@ def declaracionVariables():
 	if(preanalisis == 'var'):
 		match('var')
 		listaVariables()
-		match('punto_coma')
+		
 	else:
 		reportar("Error de Sintaxis: se esperaba VAR",preanalisis,"declaracionVariables")
 
 def listaVariables():
 	if(verbose):
-		print("listaVariable")
+		print("listaVariables")
 	if(preanalisis == "identificador"):
 		listaIdentificador()
 		match("dos_puntos")
 		tipoVariables()
+		match('punto_coma')
+		listaVariablesRep()
 	else:
 		reportar("Error de Sintaxis: se esperaba un identificador valido",preanalisis,"listaVariables")
+
+def listaVariablesRep():
+	if(verbose):
+		print("listaVariablesRep")
+	if(preanalisis == "identificador"):
+		listaVariables()
 
 
 def listaIdentificador():
@@ -141,7 +139,7 @@ def compuesta():
 	elif (preanalisis == "begin"):
 		sentenciaCompuesta()
 	else:
-		reportar("Error de Sintaxis: se esperaba un identificador valido o BEGIN",preanalisis,"compuesta")
+		reportar("Error de Sintaxis: se esperaba WRITE, READ, WHILE, IF, un identificador valido o BEGIN",preanalisis,"compuesta")
 
 def sentenciaOptativa():
 	if(verbose):
@@ -174,11 +172,13 @@ def sentencia():
 	elif(preanalisis == 'write'):
 		match("write")
 		match("parentesis_a")
-		llamada2()
+		expresionGeneral()
+		match("parentesis_c")
 	elif(preanalisis == "read"):
 		match("read")
 		match("parentesis_a")
 		identificador()
+		match("parentesis_c")
 	elif(preanalisis == "identificador"):
 		identificador()
 		asignacionollamada()
@@ -187,16 +187,18 @@ def sentencia():
 
 
 def asignacionollamada():
+	#caso2={"operador_termino","operador_aritmetico","operador_relacional","and","or","parentesis_c","parentesis_a","then","do"}
 	if(verbose):
 		print("asignacionollamada")
 	if (preanalisis == "asignacion"):
 		match("asignacion")
 		expresionGeneral()
 	elif (preanalisis == "parentesis_a"):
-		match("parentesis_a")
 		llamada1()
+	#elif (preanalisis == "punto_coma"):
+	#	match("punto_coma")
 	else:
-		reportar("Error de sintaxis: se esperaba := o (",preanalisis,"asignacionollamada")
+		reportar("Error de sintaxis: se esperaba :=, (, o ;",preanalisis,"asignacionollamada")
 
 
 def expresionAritmetica():
@@ -245,7 +247,7 @@ def factor():
 		print("factor")
 	if (preanalisis == "identificador"):
 		identificador()
-		factor1()
+		llamada1()
 	elif (preanalisis == "write"):
 		match("write")
 		match("parentesis_a")
@@ -268,12 +270,12 @@ def factor():
 	else:
 		reportar("Error de sintaxis: se esperaba WRITE,READ,TRUE,FALSE,DIGITO,NOT,( o Identificador valido",preanalisis,"factor")
 
-def factor1():
-	if(verbose):
-		print("factor1")
-	if ( preanalisis == "parentesis_a"):
-		match("parentesis_a")
-		llamada1()
+# def factor1():
+# 	if(verbose):
+# 		print("factor1")
+# 	if ( preanalisis == "parentesis_a"):
+# 		match("parentesis_a")
+# 		llamada1()
 		
 def operadorRelacional():
 	if(verbose):
@@ -317,7 +319,6 @@ def programaRepPyf():
 def programaRepSentencia():
 	if(verbose):
 		print("programaRepSentencia")
-	global letras
 	caso1={"begin", "read", "write","while","if"}
 	if ( (preanalisis in caso1) or (preanalisis == "identificador")):
 		compuesta()
@@ -397,14 +398,13 @@ def ifthen1():
 		alternativa()
 	elif ((preanalisis in caso2) or (preanalisis == "identificador")):
 		sentencia()
-		match("punto_coma")
+		alternativa()
 	else: 
 		reportar("Error de sintaxis: se esperaba WRITE,READ,WHILE,IF,BEGIN o Identificador valido",preanalisis,"ifthen1")
 
 def alternativa():
 	if(verbose):
 		print("alternativa")
-	global letras
 	if  (preanalisis == "punto_coma"):
 		match("punto_coma")
 	elif (preanalisis == "else"):
@@ -430,9 +430,7 @@ def declaracionPyf():
 	if ( preanalisis == "procedure"):
 		match("procedure")
 		identificador()
-		match("parentesis_a")
 		parametrosRep()
-		match("parentesis_c")
 		match("punto_coma")
 		declaracionVariableOpt()
 		declaracionPyfRep()
@@ -440,10 +438,8 @@ def declaracionPyf():
 	elif ( preanalisis == "function"):
 		match("function")
 		identificador()
-		match("parentesis_a")
 		parametrosRep()
-		match("parentesis_c")
-		match("dos_punto")
+		match("dos_puntos")
 		tipoVariables()
 		match("punto_coma")
 		declaracionVariableOpt()
@@ -455,10 +451,11 @@ def declaracionPyf():
 def parametrosRep():
 	if(verbose):
 		print("parametrosRep")
-	if ( preanalisis == "identificador"):
+	if ( preanalisis == "parentesis_a"):
+		match("parentesis_a")
 		listaVariables()
 		parametrosFormalesRep()	 
-
+		match("parentesis_c")
 
 def declaracionVariablesRep():
 	if(verbose):
@@ -501,7 +498,6 @@ def parametrosRealesRep():
 def llamadaProcedimiento():
 	if(verbose):
 		print("llamadaProcedimiento")
-	global letras
 	if ( preanalisis == "write"):
 		match("write")
 		match("parentesis_a")
@@ -514,7 +510,6 @@ def llamadaProcedimiento():
 		match("parentesis_c")
 	elif ( preanalisis == "identificador"):
 		identificador()
-		match("parentesis_a")
 		llamada1()
 	else:
 		reportar("Error de sintaxis: se esparaba llamada a Procedimiento o Funcion",preanalisis,"llamadaProcedimiento")
@@ -522,27 +517,22 @@ def llamadaProcedimiento():
 def llamada1():
 	if(verbose):
 		print("llamada1")
-	global letras
-	caso2={'false', 'true', 'parentesis_a', 'operador_aritmetico', 'write', 'read', 'operador_logico'}
-	if ( preanalisis == "parentesis_c"):
-		match("parentesis_c")
-	elif((preanalisis == "identificador") or (preanalisis == "numero") or preanalisis in caso2):
+	#caso2={'false', 'true', 'parentesis_a', 'operador_aritmetico', 'write', 'read', 'operador_logico'}
+	if(preanalisis == "parentesis_a"):
+		match("parentesis_a")
 		parametrosReales()
 		parametrosReales2()
 		match("parentesis_c")
-	else:
-		reportar("Error de sintaxis: se esperaba WRITE,READ,NOT,TRUE,FALSE,(,-,Digito o Identificador Valido",preanalisis,"llamada1")
-
+	
 def llamada2():
 	if(verbose):
 		print("llamada2")
-	global letras
 	if ( (preanalisis == "identificador")):
 		identificador()
 		match("parentesis_c")
 	elif ( preanalisis == "identificador") or (preanalisis == "operador_aritmetico"):
 		digitos()
-		match("parentecis_c")
+		match("parentesis_c")
 	else:
 		reportar("Error de sintaxis: se esperaba Digitos o un Identificador Valido",preanalisis,"llamada2")
 
@@ -554,33 +544,54 @@ def parametrosReales2():
 		match("coma")
 		parametrosReales()
 		parametrosReales2()
-
 #Procedimiento Match dado en la teoria
 def match(t):
 	global tokens
 	global posicion
 	global preanalisis
-	
+	global preanalisisAnterior
+	global nroLinea
+
 	if(preanalisis == t):
 		if(verbose):
 			print(">Match:"+preanalisis)        
 		posicion += 1
 		if(posicion < len(tokens)):
-			preanalisis = tokens[posicion]
+			if(args.standalone):
+				preanalisisAnterior = preanalisis
+				preanalisis = tokens[posicion]
+			else:
+				preanalisisAnterior = preanalisis
+				preanalisis = siguientePreanalisis()
+				print "PREANALISIS:---->"+str(preanalisis)
 	else:
-		reportarMatch("Error de sintaxis, no se esperaba ",preanalisis,tokens[posicion-1],"match")
+		reportarMatch("["+str(nroLinea)+"] "+"Error de sintaxis, no se esperaba ",preanalisis,preanalisisAnterior,"match")
 		
 def reportar(tipoError,simbolo,metodo):
-	print "ERROR DETECTADO: "+ tipoError+ " en la expresion "+ repr(preanalisis)+" despues de "+ tokens[posicion-1] +"\n"
-	exit(0)
+	global error
+	global preanalisisAnterior
+	global nroLinea
+
+	err = "["+str(nroLinea)+"] "+tipoError+ " en la expresion "+ repr(preanalisis)+" despues de "+ preanalisisAnterior +" .Por favor revise la definicion de "+ metodo +"\n"
+	if(args.standalone):
+		print err
+		exit(0)
+	else:
+		error.append(err)
+	
 
 def reportarMatch(tipoError,simbolo,simboloanterior,metodo):
+	global error
+	
 	if(simboloanterior == preanalisis):
-		print "ERROR DETECTADO: "+ tipoError+ " "+ repr(preanalisis) +". El archivo debe finalizar con END seguido de punto."+"\n"
+		err= tipoError+ " "+ repr(preanalisis) +". El archivo debe finalizar con END seguido de punto."+"\n"
 	else:
-		print "ERROR DETECTADO: "+ tipoError+ " "+ repr(preanalisis) +" despues de "+ repr(simboloanterior)+"\n"
-	exit(0)
-
+		err= tipoError+ " "+ repr(preanalisis) +" despues de "+ repr(simboloanterior)+"\n"
+	if(args.standalone):
+		print err
+		exit(0)
+	else:
+		error.append(err)
 	
 	
 def between(value, a, b):
@@ -596,25 +607,102 @@ def between(value, a, b):
     return value[adjusted_pos_a:pos_b]
 
 
-archivo = args.archivo
-archivo += ".tokens"
-#Procesamos el archivo linea por linea    
-numeroLinea=1
-with open(archivo) as f:
-    for line in f:
-		linea = between(line,'[',',')
-		linea = linea[1:-1]
-		if(linea != ''):
-			tokens.append(linea.lower())
-f.close()
+def main():
+	#Error
+	global error
+	#error=[]
 
-#Comenzamos a procesar los tokens encontrados sabiendo que un programa Pascal comienza con la sentencia program
-if(posicion < len(tokens)):
-	preanalisis = tokens[posicion]
-	if(verbose):
-		print("-------->TRAZA DE EJECUCION DE LA GRAMATICA:")
-	programa()
-	print("Analisis Finalizado. Sin errores detectados")
-#Salida de Tokens
-if(args.verbose_mode):
-        print tokens
+	#Tokens
+	global tokens
+	tokens=[]
+
+	global nroLinea
+	global preanalisis
+
+	archivo = args.archivo
+	archivo += ".tokens"
+	#Procesamos el archivo linea por linea    
+	nroLinea=1
+	with open(archivo) as f:
+	    for line in f:
+			linea = between(line,'[',',')
+			linea = linea[1:-1]
+			if(linea != ''):
+				tokens.append(linea.lower())
+	f.close()
+	
+	#Comenzamos a procesar los tokens encontrados sabiendo que un programa Pascal comienza con la sentencia program
+	if(posicion < len(tokens)):
+		preanalisis = tokens[posicion]
+		if(verbose):
+			print("-------->TRAZA DE EJECUCION DE LA GRAMATICA:")
+		programa()
+		print("Fin de la ejecucion")
+	#Salida de Tokens
+	if(args.verbose_mode):
+	        print tokens
+	
+def procesar():
+	global preanalisis
+	global error
+	
+	#Comenzamos a procesar los tokens encontrados sabiendo que un programa Pascal comienza con la sentencia program
+	if(posicion < len(tokens)):
+		preanalisis = siguientePreanalisis()
+		if(verbose):
+			print("-------->TRAZA DE EJECUCION DE LA GRAMATICA:")
+		programa()
+	#Salida de Tokens
+	if(args.verbose_mode):
+	        print tokens
+	
+	if(error):
+		error = list(set(error))
+		print "ERRORES DETECTADOS: "+ repr(len(error))
+		for e in error:
+			print e
+		os.system('kill %d' % os.getpid())
+	else:
+	        print "Analisis finalizado. No hay errores detectados"
+	
+	        
+if __name__ == '__main__':
+	#Definicion de argumentos y pasaje de parametros.
+
+	parser = argparse.ArgumentParser(description="Analizador Sintactico de Pascal Reducido")
+	parser.add_argument("archivo", help="Ruta relativa del fichero a analizar sintacticamente.", type=str)
+	parser.add_argument("-verbose_mode","-v", help="Flag para modo Verboso con impresiones de control.",action='store_true')
+	parser.add_argument("-standalone","-s", help="Flag para funcionamiento por separado del aplicativo.",action='store_true')
+	args = parser.parse_args()
+	verbose= args.verbose_mode
+
+	if(args.standalone):
+		main()
+	else:
+		procesar()
+
+	
+
+
+# archivo = args.archivo
+# archivo += ".tokens"
+# #Procesamos el archivo linea por linea    
+# numeroLinea=1
+# with open(archivo) as f:
+#     for line in f:
+# 		linea = between(line,'[',',')
+# 		linea = linea[1:-1]
+# 		if(linea != ''):
+# 			tokens.append(linea.lower())
+# f.close()
+
+# #Comenzamos a procesar los tokens encontrados sabiendo que un programa Pascal comienza con la sentencia program
+# if(posicion < len(tokens)):
+# 	preanalisis = tokens[posicion]
+# 	if(verbose):
+# 		print("-------->TRAZA DE EJECUCION DE LA GRAMATICA:")
+# 	programa()
+# 	print("Analisis Finalizado. Sin errores detectados")
+# #Salida de Tokens
+# if(args.verbose_mode):
+#         print tokens
