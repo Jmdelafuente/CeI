@@ -195,8 +195,8 @@ def asignacionollamada():
 		expresionGeneral()
 	elif (preanalisis == "parentesis_a"):
 		llamada1()
-	#elif (preanalisis == "punto_coma"):
-	#	match("punto_coma")
+	elif (preanalisis == "punto_coma"):
+		match("punto_coma")
 	else:
 		reportar("Error de sintaxis: se esperaba :=, (, o ;",preanalisis,"asignacionollamada")
 

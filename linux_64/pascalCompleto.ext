@@ -15,13 +15,13 @@ end;
 
 
 BEGIN
-{funcion;}
+funcion;
 b:=3+b>6 or (2<>c) and c<4;
 e:=b and false;
-{if not(a > b) THEN
+if not(a > b) THEN
 	c := true or false
 else
-noidentado;}
+noidentado;
 
 
 END.
