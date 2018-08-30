@@ -44,10 +44,15 @@ error=[]
 
 #Numero de Linea
 global nroLinea
+nroLinea = 1
 
 #Cadena procesado
 global cadena
 cadena=""
+
+#Archivo abierto
+global f
+f = None
 
 #Palabras reservadas
 global palabrasReservadas
@@ -94,7 +99,7 @@ def q0(x):
                 '\n': 'q0',
                 ' ':  'q0',
                 '\t': 'q0',
-                ',': 'q27'
+                ',': 'q27',
 	}
         
         cadena = cadena + x
@@ -277,7 +282,6 @@ def q14(x):
 	        'letra': 'q14',
 	}
         try:
-
                 state = entrada[char]
         except KeyError:
                 state = 'q15'
@@ -288,7 +292,6 @@ def q14(x):
 def q15(x):
         ret = 1
         global cadena
-        global tokens
         global state
 
         cadena = cadena[:-1]
@@ -346,7 +349,7 @@ def q19(x):
 def q20(x):
         global cadena
         global state
-        
+
         ret = 1
         tokens.append(["PUNTO",cadena,nroLinea])
         cadena=""
@@ -436,34 +439,36 @@ def q27(x):
 
 
 def process(line):
-    i=0
-    global nroLinea
-    global cadena
-    global error
-    if(args.verbose_mode):
+        i=0
+        global nroLinea
+        global cadena
+        global error
+        if(args.verbose_mode):
 		print "Longitud de Linea: " + repr(len(line))
 		  
-    #Revision caracter a caracter de la linea
-    while i < (len(line)):
-		#Por normalizacion, se trabaja en minusculas
-		x = line[i]
-		x = x.upper()
-		i +=1
-		#Salida de programador activada?
-		if(args.verbose_mode):
-			print "El estado es: " + state
-			print "X es: " + repr(x)
-			print "Caracter numero: " + repr(i)
-		#Llamada a la maquina de estados con estado 'state' y entrada 'x'
-		try:
-			valor = estados[state](x)                   #Valor almacena cuantos caracteres hay que retroceder luego de llegar al estado
-			i = i - valor
-		#No existe transicion para ese estado y ese caracter
-		except KeyError:
-			error.append('['+repr(nroLinea)+']' " Caracter(es) no reconocido(s) " + cadena)
-			cadena = ""
-                
-
+        #Revision caracter a caracter de la linea
+        while i <= (len(line)):
+                if(i < len(line)):
+                        #Por normalizacion, se trabaja en minusculas
+                        x = line[i]
+                        x = x.upper()
+                        i +=1
+                        #Salida de programador activada?
+                        if(args.verbose_mode):
+                                print "El estado es: " + state
+                                print "X es: " + repr(x)
+                                print "Caracter numero: " + repr(i)
+                        #Llamada a la maquina de estados con estado 'state' y entrada 'x'
+                        try:
+                                valor = estados[state](x)                   #Valor almacena cuantos caracteres hay que retroceder luego de llegar al estado
+                                i = i - valor
+                        #No existe transicion para ese estado y ese caracter
+                        except KeyError:
+                                error.append('['+repr(nroLinea)+']' " Caracter(es) no reconocido(s) " + cadena)
+                                cadena = ""
+                else:
+                        estados[state](x)
+                        break
 #Definicion de estados posibles
 global estados
 estados = {
@@ -494,7 +499,7 @@ estados = {
         'q24': q24,
         'q25': q25,
         'q26': q26,
-        'q27': q27
+        'q27': q27,
 	}
 
                                          
@@ -534,25 +539,16 @@ def main():
 	else:
 	        print "Analisis lexico finalizado. No hay errores detectados"
 
-def analizarArchivo(archivo,verboso):
+def analizarArchivo(archiv,verboso):
 	#Procesamos el archivo linea por linea    
 	global nroLinea
 	global tokens
+	global archivo
 	
-	
+        archivo = archiv
 	nroLinea=1
 	
-	with open(archivo) as f:
-	    for line in f:
-			tokens.append(process(line))
-	                nroLinea += 1
-	f.close()
-	
-	
-	tokens = [x for x in tokens if x is not None]
-	#Corroboramos EOF y Comentario abierto
-	if bandera:
-		error.append("[EOF] Final de archivo inesperado: Comentario no finalizado") #hay que pensar si puede haber mas de un error como tratarlo quizas imprimir un error por linea y enumerarlos
+        #Corroboramos EOF y Comentario abierto
 	        
 	#Salida de Tokens
 	#if(verboso):
@@ -570,27 +566,34 @@ def analizarArchivo(archivo,verboso):
 	
 def siguientePreanalisis():
 	global nroLinea
-	
-	if(len(tokens)):
-		t = (tokens.pop(0))
-		nroLinea = t[2]
-		return t[0].lower()
-	else:
-		return "EOF"
-		
-# if __name__ == '__main__':
-# 	#Definicion de argumentos y pasaje de parametros.
-# 	parser = argparse.ArgumentParser(description="Analizador Sintactico de Pascal Reducido")
-# 	parser.add_argument("archivo", help="Ruta relativa del fichero a analizar sintacticamente.", type=str)
-# 	parser.add_argument("-verbose_mode","-v", help="Flag para modo Verboso con impresiones de control.",action='store_true')
-#         parser.add_argument("-standalone","-s", help="Flag para funcionamiento por separado del aplicativo.",action='store_true')
-#         args = parser.parse_args()
+	global f
+        global archivo
+        global tokens
 
-# 	if(args.standalone):
-# 		main()
-# 	else:
-# 		analizarArchivo(args.archivo,args.verbose_mode)
-	
+        while len(tokens)==0:
+                if(f is None):
+                        f=open(archivo,"r")
+                nroLinea += 1
+                linea = f.readline()
+                if(linea == ''):
+                        if bandera:
+                                error.append("[EOF] Final de archivo inesperado: Comentario no finalizado")
+                        return "EOF"
+                else:
+                        process(linea)
+                        
+                        
+        
+        t = (tokens.pop(0))
+        return t[0].lower()
+
+def inicializar(nombreArchivo):
+        global nroLinea
+        global archivo
+
+
+        nroLinea=1
+        archivo = nombreArchivo
 
 #Definicion de argumentos y pasaje de parametros.
 parser = argparse.ArgumentParser(description="Analizador Sintactico de Pascal Reducido")
@@ -600,41 +603,10 @@ parser.add_argument("-standalone","-s", help="Flag para funcionamiento por separ
 args = parser.parse_args()
 
 if(args.standalone):
-	main()
+        main()
 else:
-	analizarArchivo(args.archivo,args.verbose_mode)
+        inicializar(args.archivo)
+
+
+ 		
 	
-
-                        
-# #Procesamos el archivo linea por linea    
-# numeroLinea=1
-# with open(args.archivo) as f:
-#     for line in f:
-# 		tokens.append(process(line,numeroLinea))
-#                 numeroLinea += 1
-# f.close()
-
-# tokens = [x for x in tokens if x is not None]
-# #Corroboramos EOF y Comentario abierto
-# if bandera:
-# 	error.append("[EOF] Final de archivo inesperado: Comentario no finalizado") #hay que pensar si puede haber mas de un error como tratarlo quizas imprimir un error por linea y enumerarlos
-        
-# #Salida de Tokens
-# if(args.verbose_mode):
-#         print tokens
-
-# #Guardando archivo .tokens
-# with open(args.archivo+'.tokens', 'w') as file:
-#         for t in tokens:
-#                 file.write(repr(t))
-#                 file.write("\n")
-# file.close()
-# #Corroboramos la existencia de errores y los reportamos
-# if(error):
-#         print "ERRORES DETECTADOS EN ANALISIS LEXICO: "+ repr(len(error))
-#         for e in error:
-#                 print e
-#         os.system('kill %d' % os.getpid())
-# else:
-#         print "Analisis lexico finalizado. No hay errores detectados"
-

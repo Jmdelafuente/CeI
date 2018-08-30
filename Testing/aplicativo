@@ -4,6 +4,7 @@
 #Imports necesarios
 import argparse
 import sys
+from analizadorLexico import inicializar
 
 
 #Definicion de argumentos y pasaje de parametros.
@@ -18,7 +19,7 @@ archivo= args.archivo
 verboso= args.verbose_mode
 standalone = args.standalone
 
-#Llamada para lanzar el analizador Lexico
+#Llamada para inicializar el analizador Lexico
 if(verboso):
 	sys.argv = ['analizadorLexico.py',archivo,'-v']
 else:
@@ -27,6 +28,7 @@ else:
 if(standalone):
 	sys.argv.append('-s')
 
+inicializar(archivo)
 
 execfile('analizadorLexico.py')
 #LLamada para lanzar el analizador Sintactico

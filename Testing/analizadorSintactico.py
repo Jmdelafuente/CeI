@@ -31,7 +31,7 @@ preanalisisAnterior=""
 global posicion
 posicion=0
 
-global nroLinea
+#global nroLinea
 
 #Palabras reservadas
 global palabrasReservadas
@@ -139,7 +139,7 @@ def compuesta():
 	elif (preanalisis == "begin"):
 		sentenciaCompuesta()
 	else:
-		reportar("Error de Sintaxis: se esperaba un identificador valido o BEGIN",preanalisis,"compuesta")
+		reportar("Error de Sintaxis: se esperaba WRITE, READ, WHILE, IF, un identificador valido o BEGIN",preanalisis,"compuesta")
 
 def sentenciaOptativa():
 	if(verbose):
@@ -554,15 +554,11 @@ def match(t):
 
 	if(preanalisis == t):
 		if(verbose):
-			print(">Match:"+preanalisis)        
-		posicion += 1
-		if(posicion < len(tokens)):
-			if(args.standalone):
-				preanalisisAnterior = preanalisis
-				preanalisis = tokens[posicion]
-			else:
-				preanalisisAnterior = preanalisis
-				preanalisis = siguientePreanalisis()
+			print ">Match:"+str(preanalisis)        
+		preanalisisAnterior = preanalisis
+		preanalisis = siguientePreanalisis()
+		if(verbose):
+			print ">PREANALISIS:"+str(preanalisis)
 	else:
 		reportarMatch("["+str(nroLinea)+"] "+"Error de sintaxis, no se esperaba ",preanalisis,preanalisisAnterior,"match")
 		
@@ -646,11 +642,10 @@ def procesar():
 	global error
 	
 	#Comenzamos a procesar los tokens encontrados sabiendo que un programa Pascal comienza con la sentencia program
-	if(posicion < len(tokens)):
-		preanalisis = siguientePreanalisis()
-		if(verbose):
-			print("-------->TRAZA DE EJECUCION DE LA GRAMATICA:")
-		programa()
+	preanalisis = siguientePreanalisis()
+	if(verbose):
+		print("-------->TRAZA DE EJECUCION DE LA GRAMATICA:")
+	programa()
 	#Salida de Tokens
 	#if(args.verbose_mode):
 	#        print tokens
@@ -660,7 +655,7 @@ def procesar():
 		print "ERRORES DETECTADOS: "+ repr(len(error))
 		for e in error:
 			print e
-			os.system('kill %d' % os.getpid())
+		os.system('kill %d' % os.getpid())
 	else:
 	        print "Analisis finalizado. No hay errores detectados"
 	
