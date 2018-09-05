@@ -569,11 +569,13 @@ def siguientePreanalisis():
 	global f
         global archivo
         global tokens
+        
 
         while len(tokens)==0:
                 if(f is None):
                         f=open(archivo,"r")
                 nroLinea += 1
+                
                 linea = f.readline()
                 if(linea == ''):
                         if bandera:
@@ -592,7 +594,7 @@ def inicializar(nombreArchivo):
         global archivo
 
 
-        nroLinea=1
+        nroLinea=0
         archivo = nombreArchivo
 
 #Definicion de argumentos y pasaje de parametros.

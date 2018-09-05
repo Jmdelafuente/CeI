@@ -11,7 +11,10 @@ import random
 import argparse
 import re
 import os
-from analizadorLexico import siguientePreanalisis
+#from analizadorLexico import siguientePreanalisis
+import analizadorLexico
+#import analizadorLexico
+
 
 
 ##Variables globales
@@ -544,6 +547,7 @@ def parametrosReales2():
 		match("coma")
 		parametrosReales()
 		parametrosReales2()
+
 #Procedimiento Match dado en la teoria
 def match(t):
 	global tokens
@@ -554,25 +558,20 @@ def match(t):
 
 	if(preanalisis == t):
 		if(verbose):
-			print(">Match:"+preanalisis)        
-		posicion += 1
-		if(posicion < len(tokens)):
-			if(args.standalone):
-				preanalisisAnterior = preanalisis
-				preanalisis = tokens[posicion]
-			else:
-				preanalisisAnterior = preanalisis
-				preanalisis = siguientePreanalisis()
-				print "PREANALISIS:---->"+str(preanalisis)
+			print ">Match:"+str(preanalisis)        
+		preanalisisAnterior = preanalisis
+		preanalisis = analizadorLexico.siguientePreanalisis()
+		if(verbose):
+			print ">PREANALISIS:"+str(preanalisis)
 	else:
-		reportarMatch("["+str(nroLinea)+"] "+"Error de sintaxis, no se esperaba ",preanalisis,preanalisisAnterior,"match")
+		reportarMatch("["+str(analizadorLexico.nroLinea)+"] "+"Error de sintaxis, no se esperaba ",preanalisis,preanalisisAnterior,"match")
 		
 def reportar(tipoError,simbolo,metodo):
 	global error
 	global preanalisisAnterior
 	global nroLinea
 
-	err = "["+str(nroLinea)+"] "+tipoError+ " en la expresion "+ repr(preanalisis)+" despues de "+ preanalisisAnterior +" .Por favor revise la definicion de "+ metodo +"\n"
+	err = "["+str(analizadorLexico.nroLinea)+"] "+tipoError+ " en la expresion "+ repr(preanalisis)+" despues de "+ preanalisisAnterior+"\n"
 	if(args.standalone):
 		print err
 		exit(0)
@@ -647,18 +646,18 @@ def procesar():
 	global error
 	
 	#Comenzamos a procesar los tokens encontrados sabiendo que un programa Pascal comienza con la sentencia program
-	if(posicion < len(tokens)):
-		preanalisis = siguientePreanalisis()
-		if(verbose):
-			print("-------->TRAZA DE EJECUCION DE LA GRAMATICA:")
-		programa()
+	preanalisis = analizadorLexico.siguientePreanalisis()
+	if(verbose):
+		print("-------->TRAZA DE EJECUCION DE LA GRAMATICA:")
+	programa()
 	#Salida de Tokens
-	if(args.verbose_mode):
-	        print tokens
+	#if(args.verbose_mode):
+	#        print tokens
 	
 	if(error):
 		error = list(set(error))
-		print "ERRORES DETECTADOS: "+ repr(len(error))
+		print '\033[91m'+"ERRORES DETECTADOS: "+ repr(len(error))
+		print '\033[93m'+"[Nro de Linea] Descripcion del error"+'\033[0m'
 		for e in error:
 			print e
 		os.system('kill %d' % os.getpid())

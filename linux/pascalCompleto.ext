@@ -15,7 +15,7 @@ end;
 
 
 BEGIN
-funcion;
+funcion(a,b,d+e,not c);
 b:=3+b>6 or (2<>c) and c<4;
 e:=b and false;
 if not(a > b) THEN

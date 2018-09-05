@@ -7,7 +7,7 @@ d : boolean;
 
 procedure funcion;
 var
-a : integer;
+a : integer
 begin
 	a := 10<9;
 end;
@@ -19,6 +19,7 @@ d:=b and false;
 if not(a > b) THEN
 	c := true or false
 else
+	e:=false;
 noidentado;
 
 
