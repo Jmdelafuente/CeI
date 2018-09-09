@@ -481,6 +481,7 @@ def declaracionPyf():
 		sentenciaCompuesta()
 		
 		#Semantico: Cambio de contexto: desapilo la tabla procedure
+		identificadoresActuales=[]
 		tablaActual = tablaActual.parent
 	elif ( preanalisis == "function"):
 		#Sintactico
@@ -504,6 +505,7 @@ def declaracionPyf():
 		declaracionPyfRep()
 		sentenciaCompuesta()
 		#Semantico: Cambio de contexto: desapilo la tabla de function
+		identificadoresActuales=[]
 		tablaActual = tablaActual.parent
 	else:
 		reportar("Error de sintaxis: se esperaba PROCEDURE o FUNCTION",preanalisis,"declaracionPyf")
