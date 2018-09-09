@@ -7,11 +7,17 @@ d : boolean;
 
 procedure funcion;
 var
-a : integer
+a : integer;
 begin
 	a := 10<9;
 end;
 
+procedure p1(zz:integer);
+var
+a : integer;
+begin
+	a := 10<9;
+end;
 
 BEGIN
 b:=3+b>6 or (2<>c and c<4);

@@ -54,6 +54,9 @@ cadena=""
 global f
 f = None
 
+#Lexema del Token actual
+global lexema
+lexema = None
 #Palabras reservadas
 global palabrasReservadas
 palabrasReservadas=["BEGIN","BOOLEAN","END","WHILE","TRUE","FALSE","IF","ELSE","PROGRAM","DO","THEN","FUNCTION","INTEGER","PROCEDURE","READ","VAR","WRITE"]
@@ -569,7 +572,7 @@ def siguientePreanalisis():
 	global f
         global archivo
         global tokens
-        
+        global lexema
 
         while len(tokens)==0:
                 if(f is None):
@@ -587,6 +590,7 @@ def siguientePreanalisis():
                         
         
         t = (tokens.pop(0))
+        lexema = t[1].lower()
         return t[0].lower()
 
 def inicializar(nombreArchivo):

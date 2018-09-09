@@ -11,18 +11,14 @@ import random
 import argparse
 import re
 import os
-#from analizadorLexico import siguientePreanalisis
 import analizadorLexico
-#import analizadorLexico
-
-
+from contexto import Contexto
+from analizadorLexico import lexema
 
 ##Variables globales
 
 #Bandera de modo verboso
 global verbose
-
-
 
 #Preanalisis procesado
 global preanalisis
@@ -40,6 +36,14 @@ posicion=0
 global palabrasReservadas
 palabrasReservadas=["begin","bool","end","while","true","false","if","else","program","do","then","and","or","function","integer","procedure","read","var","write"]
 
+##Variables para Analisis Semántico
+#Tabla de Simbolos y entrada actual
+global tablaSimbolos
+tablaSimbolos = None
+global tablaActual
+tablaActual = None
+global identificadoresActuales
+identificadoresActuales=list()
 
 #Definicion de casos posibles
 
@@ -56,10 +60,15 @@ def digitos():
 
 
 def identificador():
+	global identificadoresActuales
+
 	if(verbose):
 		print("identificador")
 	global preanalisis
 	if(preanalisis == "identificador"):
+		#Se añade el identificador a la tabla de simbolos
+		identificadoresActuales.append(analizadorLexico.lexema)
+		#Sintactico
 		match('identificador')
 	else:
 		reportar("Error de Sintaxis: se esperaba un identificador valido",preanalisis,"identificador")
@@ -70,7 +79,6 @@ def declaracionVariables():
 	if(preanalisis == 'var'):
 		match('var')
 		listaVariables()
-		
 	else:
 		reportar("Error de Sintaxis: se esperaba VAR",preanalisis,"declaracionVariables")
 
@@ -87,9 +95,14 @@ def listaVariables():
 		reportar("Error de Sintaxis: se esperaba un identificador valido",preanalisis,"listaVariables")
 
 def listaVariablesRep():
+	global identificadoresActuales
+
 	if(verbose):
 		print("listaVariablesRep")
 	if(preanalisis == "identificador"):
+		#Semantico:Si se definen mas variables, es necesario re-comenzar la lista
+		identificadoresActuales=[]
+		#Sintactico
 		listaVariables()
 
 
@@ -114,8 +127,14 @@ def tipoVariables():
 	if(verbose):
 		print("tipoVariable")
 	if( preanalisis == "integer"):
+		#Semantico: se añade el tipo a los identificadores almacenados
+		generarEntradas(preanalisis)
+		#Sintactico
 		match("integer")
 	elif( preanalisis == "boolean"):
+		#Semantico: se añade el tipo a los identificadores almacenados
+		generarEntradas(preanalisis)
+		#Sintactico
 		match("boolean")
 	else:
 		reportar("Error de Sintaxis: se esperaba INTEGER o BOOLEAN",preanalisis,"tipoVariables")
@@ -289,11 +308,21 @@ def operadorRelacional():
 				reportar("Error de sintaxis: se esperaba un operador relacional <,<=,=>,>,<> o =",preanalisis,"operadorRelacional")
 				
 def programa():
+
+	global tablaSimbolos
+	global tablaActual
+	global identificadoresActuales
 	if(verbose):
 		print("programa")
 	if ( preanalisis == "program"):
+			 #Semantico:Creación de la Tabla de Simbolos y actualización de la tabla actual
+			 tablaSimbolos = Contexto()
+			 tablaActual = tablaSimbolos
+			 #Sintactico
 			 match("program")
 			 identificador()
+			 #Semantico: Generamos la entrada para el nombre de Program
+			 generarEntradas("program")
 			 match("punto_coma")
 			 declaracionVariableOpt()
 			 programaRepPyf()
@@ -301,6 +330,8 @@ def programa():
 			 programaRepSentencia()
 			 match("end")
 			 match("punto")
+
+			
 	else:
 			 reportar("Error de sintaxis: debe comenzar con la sentencia PROGRAM Identificador",preanalisis,"programa")
 
@@ -428,26 +459,52 @@ def mientras():
 		reportar("Error de sintaxis: se esperaba WHILE",preanalisis,"mientras")
 
 def declaracionPyf():
+	global tablaActual
+	global identificadoresActuales
 	if(verbose):
 		print("declaracionPyf")
 	if ( preanalisis == "procedure"):
+		
+		#Sintactico
 		match("procedure")
 		identificador()
+		#Semantico: Generar entrada en la Tabla para el procedimiento
+		generarEntradas("procedure")
+		#Semantico: Cambio de contexto: de Program a Procedure
+		tablaActual = tablaActual.new_child()
+		
+		#Sintactico
 		parametrosRep()
 		match("punto_coma")
 		declaracionVariableOpt()
 		declaracionPyfRep()
 		sentenciaCompuesta()
+		
+		#Semantico: Cambio de contexto: desapilo la tabla procedure
+		tablaActual = tablaActual.parent
 	elif ( preanalisis == "function"):
+		#Sintactico
 		match("function")
 		identificador()
+		#Semantico: Generar entrada en la Tabla para el procedimiento y almacenar el nombre de la funcion para su variable ret
+		variableRetorno = identificadoresActuales
+		generarEntradas("function")
+		#Semantico: Cambio de contexto: de Program a Function
+		tablaActual = tablaActual.new_child()
+		#Sintactico
 		parametrosRep()
 		match("dos_puntos")
+		#Semantico: Definimos la variable de retorno para ser insertada con su tipo de Variable
+		print variableRetorno
+		identificadoresActuales = variableRetorno
+		#Sintactico
 		tipoVariables()
 		match("punto_coma")
 		declaracionVariableOpt()
 		declaracionPyfRep()
 		sentenciaCompuesta()
+		#Semantico: Cambio de contexto: desapilo la tabla de function
+		tablaActual = tablaActual.parent
 	else:
 		reportar("Error de sintaxis: se esperaba PROCEDURE o FUNCTION",preanalisis,"declaracionPyf")
 
@@ -456,7 +513,9 @@ def parametrosRep():
 		print("parametrosRep")
 	if ( preanalisis == "parentesis_a"):
 		match("parentesis_a")
-		listaVariables()
+		listaIdentificador()
+		match("dos_puntos")
+		tipoVariables()
 		parametrosFormalesRep()	 
 		match("parentesis_c")
 
@@ -477,9 +536,11 @@ def declaracionPyfRep():
 def parametrosFormalesRep():
 	if(verbose):
 		print("parametrosFormalesRep")
-	if ( preanalisis == "coma"):
-		match("coma")
-		listaVariables()
+	if ( preanalisis == "punto_coma"):
+		match("punto_coma")
+		listaIdentificador()
+		match("dos_puntos")
+		tipoVariables()
 		parametrosFormalesRep()
 
 def parametrosReales():
@@ -663,8 +724,28 @@ def procesar():
 		os.system('kill %d' % os.getpid())
 	else:
 	        print "Analisis finalizado. No hay errores detectados"
-	
-	        
+
+##DEFINICIONES SEMANTICO
+def generarEntradas(tipo):
+	global identificadoresActuales
+	global tablaActual
+	#Añadir cada identificador a la tabla con el tipo asociado
+	for identificador in identificadoresActuales:
+		#si el identificador existe: añadimos el error
+		try:
+			tablaActual.map[identificador]
+			reportar("Identificador "+repr(identificador)+" ya definido",identificador,"generarVariables")
+		#El identificador no existe
+		except KeyError:
+			tablaActual[identificador]={"tipo":tipo}
+			if(verbose):
+				print ('\033[92m'+"[SEMANTICO:] Nueva entrada: "+repr(identificador)+" : "+repr(tipo)+'\033[0m')
+				print repr(tablaActual)
+				print repr(tablaActual.map)
+			
+	#Ya se guardaron todos los identificadores en la tabla de simbolos
+	identificadoresActuales=[]
+
 if __name__ == '__main__':
 	#Definicion de argumentos y pasaje de parametros.
 
