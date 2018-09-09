@@ -9,7 +9,6 @@
 import string
 import random
 import argparse
-import re
 import os
 import analizadorLexico
 from tabla import Tabla
@@ -29,12 +28,6 @@ preanalisisAnterior=""
 #Posicion del token analizado
 global posicion
 posicion=0
-
-#global nroLinea
-
-#Palabras reservadas
-global palabrasReservadas
-palabrasReservadas=["begin","bool","end","while","true","false","if","else","program","do","then","and","or","function","integer","procedure","read","var","write"]
 
 ##Variables para Analisis Semántico
 #Tabla de Simbolos y entrada actual
@@ -56,7 +49,7 @@ def digitos():
 		match("operador_aritmetico")
 		match("numero")
 	else:
-		reportar("Error de Sintaxis: se esperaba un numero o - ",preanalisis,"digitos")
+		reportar("Error de Sintaxis: se esperaba un numero, - o + ",preanalisis,"digitos")
 
 
 def identificador():
@@ -116,9 +109,9 @@ def listaIdentificador():
 		reportar("Error de Sintaxis: se esperaba un identificador valido",preanalisis,"listaIdentificador")
 
 def listaIdentificadorRep():
-	if(verbose):
+	if verbose:
 		print("listaIdentificadorRep")
-	if( preanalisis == "coma"): 
+	if preanalisis == "coma": 
 		match("coma")
 		identificador()
 		listaIdentificadorRep()
@@ -160,8 +153,8 @@ def compuesta():
 		sentenciaOptativa()
 	elif (preanalisis == "begin"):
 		sentenciaCompuesta()
-	else:
-		reportar("Error de Sintaxis: se esperaba WRITE, READ, WHILE, IF, un identificador valido o BEGIN",preanalisis,"compuesta")
+	#else:
+	#	reportar("Error de Sintaxis: se esperaba WRITE, READ, WHILE, IF, un identificador valido o BEGIN",preanalisis,"compuesta")
 
 def sentenciaOptativa():
 	if(verbose):
@@ -209,14 +202,13 @@ def sentencia():
 
 
 def asignacionollamada():
-	#caso2={"operador_termino","operador_aritmetico","operador_relacional","and","or","parentesis_c","parentesis_a","then","do"}
-	if(verbose):
+	if verbose:
 		print("asignacionollamada")
 	if preanalisis == "asignacion":
 		match("asignacion")
 		expresionGeneral()
 	elif preanalisis == "parentesis_a":
-		llamada1()
+		llamada()
 	elif preanalisis == "punto_coma":
 		match("punto_coma")
 	else:
@@ -224,7 +216,7 @@ def asignacionollamada():
 
 
 def expresionAritmetica():
-	if(verbose):
+	if verbose:
 		print("expresionAritmetica")
 	case1 = {"write","true","false","read","parentesis_a","operador_aritmetico"}
 	if (preanalisis == "identificador") or (preanalisis == "numero") or (preanalisis in case1):
@@ -247,14 +239,10 @@ def termino():
 		print("termino")
 	case1 = {"write","true","false","read","operador_aritmetico","parentesis_a"}
 	if((preanalisis == "identificador") or (preanalisis == "numero") or (preanalisis in case1)):
-			factor()
-			termino1()
-	#elif(preanalisis=='parentesis_a'):
-	#		match("parentesis_a")
-	#		expresionGeneral()
-	#		match("parentesis_c")
+		factor()
+		termino1()
 	else:
-			reportar("Error de Sintaxis: se esperaba WRITE,READ,TRUE,FALSE,Identificador valido o Digitos",preanalisis,"expresionAritmetica1")
+		reportar("Error de Sintaxis: se esperaba WRITE,READ,TRUE,FALSE,Identificador valido o Digitos",preanalisis,"expresionAritmetica1")
 
 def termino1():
 	if(verbose):
@@ -269,11 +257,13 @@ def factor():
 		print("factor")
 	if (preanalisis == "identificador"):
 		identificador()
-		llamada1()
+		llamada()
 	elif (preanalisis == "write"):
 		match("write")
 		match("parentesis_a")
-		llamada2()
+		#llamada2()
+		expresionGeneral()
+		match("parentesis_c")
 	elif (preanalisis == "read"):
 		match("read")
 		match("parentesis_a")
@@ -291,21 +281,14 @@ def factor():
 		match("parentesis_c")
 	else:
 		reportar("Error de sintaxis: se esperaba WRITE,READ,TRUE,FALSE,DIGITO,NOT,( o Identificador valido",preanalisis,"factor")
-
-# def factor1():
-# 	if(verbose):
-# 		print("factor1")
-# 	if ( preanalisis == "parentesis_a"):
-# 		match("parentesis_a")
-# 		llamada1()
 		
 def operadorRelacional():
 	if(verbose):
 		print("operadorRelacional")
 	if preanalisis == "operador_relacional":
-				match("operador_relacional")
+		match("operador_relacional")
 	else:
-				reportar("Error de sintaxis: se esperaba un operador relacional <,<=,=>,>,<> o =",preanalisis,"operadorRelacional")
+		reportar("Error de sintaxis: se esperaba un operador relacional <,<=,=>,>,<> o =",preanalisis,"operadorRelacional")
 				
 def programa():
 
@@ -323,6 +306,7 @@ def programa():
 		identificador()
 		#Semantico: Generamos la entrada para el nombre de Program
 		generarEntradas("program")
+		#Sintactico
 		match("punto_coma")
 		declaracionVariableOpt()
 		programaRepPyf()
@@ -343,7 +327,7 @@ def declaracionVariableOpt():
 def programaRepPyf():
 	if(verbose):
 		print("programaRepPyf")
-	if (( preanalisis == "function") or (preanalisis == "procedure")):
+	if (preanalisis == "function") or (preanalisis == "procedure"):
 		declaracionPyf()
 		programaRepPyf()
 	
@@ -352,7 +336,7 @@ def programaRepSentencia():
 	if(verbose):
 		print("programaRepSentencia")
 	caso1={"begin", "read", "write","while","if"}
-	if ( (preanalisis in caso1) or (preanalisis == "identificador")):
+	if (preanalisis in caso1) or (preanalisis == "identificador"):
 		compuesta()
 		programaRepSentencia()
 	
@@ -361,57 +345,63 @@ def expresionGeneral():
 		print("expresionGeneral")
 	caso1={'false', 'true', 'parentesis_a', 'operador_aritmetico', 'write', 'read','not'}#,'and'}
 	if((preanalisis == "identificador") or (preanalisis == "numero") or (preanalisis in caso1)):
+		#compararAnd()
+		no()
+		expresionAritmetica() 
+		expresionAritmetica2() 
 		compararAnd()
 		expresionGeneral1()
 	else:
 		reportar("Error de sintaxis: se esperaba WRITE,READ,NOT,TRUE,FALSE,(,-,Digito o Identificador valido",preanalisis,"expresionGeneral")
 
 def expresionGeneral1():
-	if(verbose):
+	if verbose:
 		print("expresionGeneral1")
-	if(preanalisis == "or"):
+	if preanalisis == "or":
 		match("or")
-		compararAnd()
-		expresionGeneral1()
-
-def compararAnd():
-	if(verbose):
-		print("compararAnd")
-	caso2={'false', 'true', 'operador_aritmetico', 'write', 'read', 'parentesis_a','not'}
-	#if(preanalisis == "and"): #or preanalisis== "parentesis_a"):
+		#compararAnd()
 		#no()
-	#	match("parentesis_a")
-	#	expresionGeneral()
-	#	match("parentesis_c")
-     #           termino1()
-	#	compararAnd1()
-	if ((preanalisis == "identificador" or preanalisis == "numero" ) or (preanalisis in caso2)):
-		no()
-		expresionAritmetica() 
-		expresionAritmetica2() 
-		compararAnd1()
-	else:
-		reportar("Error de sintaxis: se esperaba WRITE,READ,TRUE,FALSE,NOT,(,-,Digito o Identificador valido",preanalisis,"expresionGeneral")
+		#expresionAritmetica() 
+		#expresionAritmetica2() 
+		#compararAnd()
+		#expresionGeneral1()
+		expresionGeneral()
+		
+#def compararAnd():
+#	if verbose:
+#		print("compararAnd")
+#	caso2={'false', 'true', 'operador_aritmetico', 'write', 'read', 'parentesis_a','not'}
+#	if (preanalisis == "identificador" or preanalisis == "numero" ) or (preanalisis in caso2):
+#		no()
+#		expresionAritmetica() 
+#		expresionAritmetica2() 
+#		compararAnd1()
+#	else:
+#		reportar("Error de sintaxis: se esperaba WRITE,READ,TRUE,FALSE,NOT,(,-,Digito o Identificador valido",preanalisis,"expresionGeneral")
 
 def expresionAritmetica2():
-	if(verbose):
+	if verbose:
 		print("expresionAritmetica2")
 	if(preanalisis  == "operador_relacional"):
 		operadorRelacional()
 		expresionAritmetica()
 
-def compararAnd1():
-	if(verbose):
+def compararAnd():
+	if verbose:
 		print("compararAnd1")
-	if(preanalisis == "and"):
+	if preanalisis == "and":
 		match("and")
+		#compararAnd()
+		no()
+		expresionAritmetica() 
+		expresionAritmetica2() 
 		compararAnd()
 
 
 def ifthen():
-	if(verbose):
+	if verbose:
 		print("ifthen")
-	if ( preanalisis == "if"):
+	if preanalisis == "if":
 		match("if")
 		expresionGeneral()
 		match("then")
@@ -420,10 +410,10 @@ def ifthen():
 		reportar("Error de sintaxis: se esperaba IF expresion THEN",preanalisis,"ifthen")
 
 def ifthen1():
-	if(verbose):
+	if verbose:
 		print("ifthen1")
 	caso2={"read", "write","while","if"}
-	if ( preanalisis == "begin"):
+	if preanalisis == "begin":
 		match("begin")
 		compuesta()
 		match("end")
@@ -547,21 +537,23 @@ def parametrosFormalesRep():
 		tipoVariables()
 		parametrosFormalesRep()
 
-def parametrosReales():
-	if(verbose):
-		print("parametrosReales")
-	caso1={'false', 'true', 'parentesis_a', 'operador_aritmetico', 'write', 'read', 'operador_logico'}
-	if(preanalisis == "identificador") or (preanalisis == "numero") or (preanalisis in caso1):
-		expresionGeneral()
-		parametrosRealesRep()
+#def parametrosReales():
+#	if(verbose):
+#		print("parametrosReales")
+#	caso1={'false', 'true', 'parentesis_a', 'operador_aritmetico', 'write', 'read', 'operador_logico'}
+#	if(preanalisis == "identificador") or (preanalisis == "numero") or (preanalisis in caso1):
+#		expresionGeneral()
+#		parametrosRealesRep()
+#	else:
+#		reportar("Error de sintaxis: se esparaban parametros para la función en la expresión",preanalisis,"llamadaProcedimiento")
 
-def parametrosRealesRep():
+def parametrosReales():
 	if(verbose):
 		print("parametrosRealesRep")
 	if ( preanalisis == "coma"):
 		match("coma")
 		expresionGeneral()
-		parametrosRealesRep()
+		parametrosReales()
 
 def llamadaProcedimiento():
 	if(verbose):
@@ -569,8 +561,9 @@ def llamadaProcedimiento():
 	if ( preanalisis == "write"):
 		match("write")
 		match("parentesis_a")
-		llamada2()
-		#parametrosRealesRep()
+		#llamada2()
+		expresionGeneral()
+		match("parentesis_c")
 	elif ( preanalisis == "read"):
 		match("read")
 		match("parentessis_a")
@@ -578,40 +571,43 @@ def llamadaProcedimiento():
 		match("parentesis_c")
 	elif ( preanalisis == "identificador"):
 		identificador()
-		llamada1()
+		llamada()
 	else:
 		reportar("Error de sintaxis: se esparaba llamada a Procedimiento o Funcion",preanalisis,"llamadaProcedimiento")
 
-def llamada1():
+def llamada():
 	if(verbose):
 		print("llamada1")
-	#caso2={'false', 'true', 'parentesis_a', 'operador_aritmetico', 'write', 'read', 'operador_logico'}
 	if(preanalisis == "parentesis_a"):
 		match("parentesis_a")
+		#parametrosReales()
+		expresionGeneral()
 		parametrosReales()
-		parametrosReales2()
+		#parametrosReales2()
 		match("parentesis_c")
 	
-def llamada2():
-	if(verbose):
-		print("llamada2")
-	if ( (preanalisis == "identificador")):
-		identificador()
-		match("parentesis_c")
-	elif ( preanalisis == "identificador") or (preanalisis == "operador_aritmetico"):
-		digitos()
-		match("parentesis_c")
-	else:
-		reportar("Error de sintaxis: se esperaba Digitos o un Identificador Valido",preanalisis,"llamada2")
+#def llamada2():
+#	if(verbose):
+#		print("llamada2")
+#	if preanalisis == "identificador":
+#		identificador()
+#		match("parentesis_c")
+#	elif ( preanalisis == "numero") or (preanalisis == "operador_aritmetico"):
+#		digitos()
+#		match("parentesis_c")
+#	else:
+#		reportar("Error de sintaxis: se esperaba Digitos o un Identificador Valido",preanalisis,"llamada2")
 
 
-def parametrosReales2():
-	if(verbose):
-		print("parametrosReales2")
-	if ( preanalisis == "coma"):
-		match("coma")
-		parametrosReales()
-		parametrosReales2()
+#def parametrosReales2():
+#	if(verbose):
+#		print("parametrosReales2")
+#	if ( preanalisis == "coma"):
+#		match("coma")
+#		#parametrosReales()
+#		expresionGeneral()
+#		parametrosRealesRep()
+#		parametrosReales2()
 
 #Procedimiento Match dado en la teoria
 def match(t):
@@ -623,20 +619,22 @@ def match(t):
 
 	if(preanalisis == t):
 		if(verbose):
-			print ">Match:"+str(preanalisis)        
+			print '\033[93m'+">Match:"+str(preanalisis)+'\033[0m'  
 		preanalisisAnterior = preanalisis
 		preanalisis = analizadorLexico.siguientePreanalisis()
 		if(verbose):
-			print ">PREANALISIS:"+str(preanalisis)
+			print '\033[1m'+">Preanalisis:"+str(preanalisis)+'\033[0m'
 	else:
 		reportarMatch("["+str(analizadorLexico.nroLinea)+"] "+"Error de sintaxis, no se esperaba ",preanalisis,preanalisisAnterior,"match")
 		
-def reportar(tipoError,simbolo,metodo):
+def reportar(tipoError,simbolo,metodo,tipoReporte="Sintactico"):
 	global error
 	global preanalisisAnterior
 	global nroLinea
-
-	err = "["+str(analizadorLexico.nroLinea)+"] "+tipoError+ " en la expresion "+ repr(preanalisis)+" despues de "+ preanalisisAnterior+"\n"
+	if tipoReporte=="Sintactico":
+		err = "["+str(analizadorLexico.nroLinea)+"] "+tipoError+ " en la expresion "+ repr(preanalisis)+" despues de "+ repr(preanalisisAnterior)+"\n"
+	elif tipoReporte=="Semantico":
+		err = "["+str(analizadorLexico.nroLinea)+"] "+tipoError+ " ya definido antes de definirse como "+ repr(preanalisis)+"\n"
 	if(args.standalone):
 		print err
 		exit(0)
@@ -699,9 +697,9 @@ def main():
 	if(posicion < len(tokens)):
 		preanalisis = tokens[posicion]
 		if(verbose):
-			print("-------->TRAZA DE EJECUCION DE LA GRAMATICA:")
+			print('\033[93m'+"-------->TRAZA DE EJECUCION DE LA GRAMATICA:"+'\033[0m')
 		programa()
-		print("Fin de la ejecucion")
+		print('\033[93m'+"Fin de la ejecucion"+'\033[0m')
 	#Salida de Tokens
 	if(args.verbose_mode):
 	        print tokens
@@ -738,15 +736,13 @@ def generarEntradas(tipo):
 		#si el identificador existe: añadimos el error
 		try:
 			tablaActual.map[identificador]
-			reportar("Identificador "+repr(identificador)+" ya definido",identificador,"generarVariables")
+			reportar("Identificador "+repr(identificador)+" ya definido",identificador,"generarVariables","Semantico")
 		#El identificador no existe
 		except KeyError:
 			tablaActual[identificador]={"tipo":tipo}
 			if(verbose):
-				print ('\033[92m'+"[SEMANTICO:] Nueva entrada: "+repr(identificador)+" : "+repr(tipo)+'\033[0m')
-				print repr(tablaActual)
-				print repr(tablaActual.map)
-			
+				print ('\033[92m'+"[SEMANTICO] Nueva entrada: "+repr(identificador)+" : "+repr(tipo)+'\033[0m')
+				
 	#Ya se guardaron todos los identificadores en la tabla de simbolos
 	identificadoresActuales=[]
 
@@ -755,7 +751,7 @@ if __name__ == '__main__':
 
 	parser = argparse.ArgumentParser(description="Analizador Sintactico de Pascal Reducido")
 	parser.add_argument("archivo", help="Ruta relativa del fichero a analizar sintacticamente.", type=str)
-	parser.add_argument("-verbose_mode","-v", help="Flag para modo Verboso con impresiones de control.",action='store_true')
+	parser.add_argument("-verbose_mode","-v", help="Flag para modo Verboso con todas las impresiones de control.",action='store_true')
 	parser.add_argument("-standalone","-s", help="Flag para funcionamiento por separado del aplicativo.",action='store_true')
 	args = parser.parse_args()
 	verbose= args.verbose_mode
@@ -766,27 +762,3 @@ if __name__ == '__main__':
 		procesar()
 
 	
-
-
-# archivo = args.archivo
-# archivo += ".tokens"
-# #Procesamos el archivo linea por linea    
-# numeroLinea=1
-# with open(archivo) as f:
-#     for line in f:
-# 		linea = between(line,'[',',')
-# 		linea = linea[1:-1]
-# 		if(linea != ''):
-# 			tokens.append(linea.lower())
-# f.close()
-
-# #Comenzamos a procesar los tokens encontrados sabiendo que un programa Pascal comienza con la sentencia program
-# if(posicion < len(tokens)):
-# 	preanalisis = tokens[posicion]
-# 	if(verbose):
-# 		print("-------->TRAZA DE EJECUCION DE LA GRAMATICA:")
-# 	programa()
-# 	print("Analisis Finalizado. Sin errores detectados")
-# #Salida de Tokens
-# if(args.verbose_mode):
-#         print tokens
