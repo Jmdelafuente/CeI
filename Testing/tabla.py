@@ -1,3 +1,4 @@
+# coding=utf-8
 'Nested contexts trees for implementing nested scopes (static or dynamic)'
 
 from collections import MutableMapping

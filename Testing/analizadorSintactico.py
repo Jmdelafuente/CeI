@@ -12,7 +12,7 @@ import argparse
 import re
 import os
 import analizadorLexico
-from contexto import Contexto
+from tabla import Tabla
 from analizadorLexico import lexema
 
 ##Variables globales
@@ -212,12 +212,12 @@ def asignacionollamada():
 	#caso2={"operador_termino","operador_aritmetico","operador_relacional","and","or","parentesis_c","parentesis_a","then","do"}
 	if(verbose):
 		print("asignacionollamada")
-	if (preanalisis == "asignacion"):
+	if preanalisis == "asignacion":
 		match("asignacion")
 		expresionGeneral()
-	elif (preanalisis == "parentesis_a"):
+	elif preanalisis == "parentesis_a":
 		llamada1()
-	elif (preanalisis == "punto_coma"):
+	elif preanalisis == "punto_coma":
 		match("punto_coma")
 	else:
 		reportar("Error de sintaxis: se esperaba :=, (, o ;",preanalisis,"asignacionollamada")
@@ -227,7 +227,7 @@ def expresionAritmetica():
 	if(verbose):
 		print("expresionAritmetica")
 	case1 = {"write","true","false","read","parentesis_a","operador_aritmetico"}
-	if((preanalisis == "identificador") or (preanalisis == "numero") or (preanalisis in case1)):
+	if (preanalisis == "identificador") or (preanalisis == "numero") or (preanalisis in case1):
 		termino() 
 		expresionAritmetica1()
 	else:
@@ -236,10 +236,10 @@ def expresionAritmetica():
 def expresionAritmetica1():
 	if(verbose):
 		print("expresionAritmetica1")
-	if ( preanalisis == "operador_aritmetico"):
-	  match("operador_aritmetico")
-	  termino()
-	  expresionAritmetica1()
+	if preanalisis == "operador_aritmetico":
+		match("operador_aritmetico")
+		termino()
+		expresionAritmetica1()
 
 
 def termino():
@@ -279,13 +279,13 @@ def factor():
 		match("parentesis_a")
 		identificador()
 		match("parentesis_c")
-	elif (preanalisis == "numero" or preanalisis == "operador_aritmetico"):
+	elif preanalisis == "numero" or preanalisis == "operador_aritmetico":
 		digitos()
-	elif (preanalisis == "true"):
+	elif preanalisis == "true":
 		match("true")
-	elif (preanalisis == "false"):
+	elif preanalisis == "false":
 		match("false")
-	elif (preanalisis == "parentesis_a"):
+	elif preanalisis == "parentesis_a":
 		match("parentesis_a")
 		expresionGeneral()
 		match("parentesis_c")
@@ -302,7 +302,7 @@ def factor():
 def operadorRelacional():
 	if(verbose):
 		print("operadorRelacional")
-	if ( preanalisis == "operador_relacional"):
+	if preanalisis == "operador_relacional":
 				match("operador_relacional")
 	else:
 				reportar("Error de sintaxis: se esperaba un operador relacional <,<=,=>,>,<> o =",preanalisis,"operadorRelacional")
@@ -312,34 +312,32 @@ def programa():
 	global tablaSimbolos
 	global tablaActual
 	global identificadoresActuales
-	if(verbose):
+	if verbose:
 		print("programa")
-	if ( preanalisis == "program"):
-			 #Semantico:Creación de la Tabla de Simbolos y actualización de la tabla actual
-			 tablaSimbolos = Contexto()
-			 tablaActual = tablaSimbolos
-			 #Sintactico
-			 match("program")
-			 identificador()
-			 #Semantico: Generamos la entrada para el nombre de Program
-			 generarEntradas("program")
-			 match("punto_coma")
-			 declaracionVariableOpt()
-			 programaRepPyf()
-			 match("begin")
-			 programaRepSentencia()
-			 match("end")
-			 match("punto")
-
-			
+	if preanalisis == "program":
+		#Semantico:Creación de la Tabla de Simbolos y actualización de la tabla actual
+		tablaSimbolos = Tabla()
+		tablaActual = tablaSimbolos
+		#Sintactico
+		match("program")
+		identificador()
+		#Semantico: Generamos la entrada para el nombre de Program
+		generarEntradas("program")
+		match("punto_coma")
+		declaracionVariableOpt()
+		programaRepPyf()
+		match("begin")
+		programaRepSentencia()
+		match("end")
+		match("punto")
 	else:
-			 reportar("Error de sintaxis: debe comenzar con la sentencia PROGRAM Identificador",preanalisis,"programa")
+		reportar("Error de sintaxis: debe comenzar con la sentencia PROGRAM Identificador",preanalisis,"programa")
 
 
 def declaracionVariableOpt():
 	if(verbose):
 		print("declaracionVariablesOpt")
-	if ( preanalisis == "var"):
+	if preanalisis == "var":
 		declaracionVariables()
 
 def programaRepPyf():
@@ -461,42 +459,46 @@ def mientras():
 def declaracionPyf():
 	global tablaActual
 	global identificadoresActuales
+	nombreSubprograma=""
 	if(verbose):
 		print("declaracionPyf")
-	if ( preanalisis == "procedure"):
-		
+	if preanalisis == "procedure":
 		#Sintactico
 		match("procedure")
 		identificador()
 		#Semantico: Generar entrada en la Tabla para el procedimiento
-		generarEntradas("procedure")
-		#Semantico: Cambio de contexto: de Program a Procedure
-		tablaActual = tablaActual.new_child()
-		
+		nombreSubprograma = identificadoresActuales[0] #guardamos temporalmente el nombre del subprograma
+		generarEntradas("procedure") #generamos la entrada en la Tabla de Simbolos para el subprograma
+		#Semantico: Cambio de ambito: de Program a Procedure
+		tablaActual = tablaActual.new_child() #generamos un contexto para guardar los parametros
 		#Sintactico
 		parametrosRep()
+		#Semantico: Los parametros deben figurar como variables en el contexto del procedure que es el nuevo actual
+		tablaActual.parent[nombreSubprograma].update({"parametros":dict(tablaActual.map.items())}) #guardamos los parametros en la Tabla de Simbols del padre
+		#Sintactico
 		match("punto_coma")
 		declaracionVariableOpt()
 		declaracionPyfRep()
 		sentenciaCompuesta()
-		
 		#Semantico: Cambio de contexto: desapilo la tabla procedure
 		identificadoresActuales=[]
 		tablaActual = tablaActual.parent
-	elif ( preanalisis == "function"):
+	elif preanalisis == "function":
 		#Sintactico
 		match("function")
 		identificador()
 		#Semantico: Generar entrada en la Tabla para el procedimiento y almacenar el nombre de la funcion para su variable ret
+		nombreSubprograma = identificadoresActuales[0] #guardamos temporalmente el nombre del subprograma
 		variableRetorno = identificadoresActuales
 		generarEntradas("function")
 		#Semantico: Cambio de contexto: de Program a Function
 		tablaActual = tablaActual.new_child()
 		#Sintactico
 		parametrosRep()
+		#Semantico: Los parametros deben figurar como variables en el contexto del procedure que es el nuevo actual
+		tablaActual.parent[nombreSubprograma].update({"parametros":dict(tablaActual.map.items())}) #guardamos los parametros en la Tabla de Simbols del padre
 		match("dos_puntos")
 		#Semantico: Definimos la variable de retorno para ser insertada con su tipo de Variable
-		print variableRetorno
 		identificadoresActuales = variableRetorno
 		#Sintactico
 		tipoVariables()
