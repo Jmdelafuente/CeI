@@ -456,10 +456,12 @@ def parametrosRep():
 		print("parametrosRep")
 	if ( preanalisis == "parentesis_a"):
 		match("parentesis_a")
-		listaVariables()
+		listaIdentificador()
+		match("dos_puntos")
+		tipoVariables()
 		parametrosFormalesRep()	 
 		match("parentesis_c")
-
+		
 def declaracionVariablesRep():
 	if(verbose):
 		print("declaracionVariablesRep")
@@ -477,9 +479,11 @@ def declaracionPyfRep():
 def parametrosFormalesRep():
 	if(verbose):
 		print("parametrosFormalesRep")
-	if ( preanalisis == "coma"):
-		match("coma")
-		listaVariables()
+	if ( preanalisis == "punto_coma"):
+		match("punto_coma")
+		listaIdentificador()
+		match("dos_puntos")
+		tipoVariables()
 		parametrosFormalesRep()
 
 def parametrosReales():
