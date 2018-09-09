@@ -493,6 +493,9 @@ def parametrosReales():
 	if(preanalisis == "identificador") or (preanalisis == "numero") or (preanalisis in caso1):
 		expresionGeneral()
 		parametrosRealesRep()
+	else:
+		reportar("Error de sintaxis: se esparaban parametros para realizar la llamada",preanalisis,"llamadaProcedimiento")
+
 
 def parametrosRealesRep():
 	if(verbose):
