@@ -298,7 +298,8 @@ def programa():
 			 declaracionVariableOpt()
 			 programaRepPyf()
 			 match("begin")
-			 programaRepSentencia()
+			 #programaRepSentencia()
+			 sentenciaCompuesta()
 			 match("end")
 			 match("punto")
 	else:
@@ -319,13 +320,13 @@ def programaRepPyf():
 		programaRepPyf()
 	
 
-def programaRepSentencia():
-	if(verbose):
-		print("programaRepSentencia")
-	caso1={"begin", "read", "write","while","if"}
-	if ( (preanalisis in caso1) or (preanalisis == "identificador")):
-		compuesta()
-		programaRepSentencia()
+#def programaRepSentencia():
+#	if(verbose):
+#		print("programaRepSentencia")
+#	caso1={"begin", "read", "write","while","if"}
+#	if ( (preanalisis in caso1) or (preanalisis == "identificador")):
+#		compuesta()
+#		programaRepSentencia()
 	
 def expresionGeneral():
 	if(verbose):

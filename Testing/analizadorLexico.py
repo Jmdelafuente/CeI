@@ -72,14 +72,14 @@ def q0(x):
         global cadena
         global state
         ret = 0
-        
+
 	if(x in letras):
 		ch = 'letra'
 	elif(x in numeros):
 		ch = 'numero'
 	else:
 		ch = x
-		
+
 	entrada={
 		'{': 'q1',
 	        'numero': 'q2',
@@ -104,7 +104,7 @@ def q0(x):
                 '\t': 'q0',
                 ',': 'q27',
 	}
-        
+
         cadena = cadena + x
 	state = entrada[ch]
 
@@ -116,24 +116,24 @@ def q1(x):
         ret = 0
         global bandera
         global state
-		
+
 	if(x=='}'):
-		
+
 		bandera = False
-		state='q0' 
-	else: 
+		state='q0'
+	else:
 		#global state
                 state = 'q1'
 		#global bandera
 		bandera = True
-        
+
         return ret
-                 
+
 def q2(x):
         ret = 0
         global state
         global cadena
-        
+
 	if(x in numeros):
 		state = 'q2'
 	else:
@@ -141,15 +141,15 @@ def q2(x):
                 state = 'q3'
         cadena = cadena + x
         return ret
-                
+
 def q3(x):
         ret = 1
 	global state
         global cadena
-        
+
         state = 'q0'
         cadena = cadena[:-1]
-        tokens.append(["NUMERO",cadena,nroLinea])        
+        tokens.append(["NUMERO",cadena,nroLinea])
         cadena = ""
         return ret
 
@@ -157,27 +157,27 @@ def q4(x):
         ret = 1
 	global state
         global cadena
-        
+
         state = 'q0'
         cadena = ""
-        tokens.append(["CORCHETE_A",x,nroLinea])        
+        tokens.append(["CORCHETE_A",x,nroLinea])
         return ret
 
 def q5(x):
         ret = 1
 	global state
         global cadena
-        
+
         state = 'q0'
         cadena = ""
-        tokens.append(["CORCHETE_C",x,nroLinea])        
+        tokens.append(["CORCHETE_C",x,nroLinea])
         return ret
 
 def q6(x):
         ret = 0
 	global cadena
         global state
-        
+
         cadena = cadena + x
         entrada={
                 '=' : 'q8',
@@ -188,7 +188,7 @@ def q6(x):
         except KeyError:
                 ret = 1
                 state='q7'
-                
+
         return ret
 
 def q7(x):
@@ -197,7 +197,7 @@ def q7(x):
         state = 'q0'
         global cadena
         cadena = cadena[:-1]
-        tokens.append(["OPERADOR_RELACIONAL",cadena,nroLinea])        
+        tokens.append(["OPERADOR_RELACIONAL",cadena,nroLinea])
         cadena = ""
         return ret
 
@@ -205,9 +205,9 @@ def q8(x):
         ret = 1
 	global state
         global cadena
-        
+
         state = 'q0'
-        tokens.append(["OPERADOR_RELACIONAL",cadena,nroLinea])        
+        tokens.append(["OPERADOR_RELACIONAL",cadena,nroLinea])
         cadena = ""
         return ret
 
@@ -216,7 +216,7 @@ def q9(x):
         global cadena
         global state
         state = 'q0'
-        tokens.append(["OPERADOR_RELACIONAL",cadena,nroLinea])        
+        tokens.append(["OPERADOR_RELACIONAL",cadena,nroLinea])
         cadena = ""
         return ret
 
@@ -224,7 +224,7 @@ def q10(x):
         ret = 0
 	global cadena
         global state
-        
+
         cadena = cadena + x
         entrada={
                 '=' : 'q12'
@@ -234,14 +234,14 @@ def q10(x):
         except KeyError:
                 ret = 1
                 state = 'q11'
-                
+
         return ret
 
 def q11(x):
         ret = 1
         global cadena
         global state
-        
+
         cadena = cadena[:-1]
         tokens.append(["OPERADOR_RELACIONAL",cadena,nroLinea])
         cadena =""
@@ -251,7 +251,7 @@ def q11(x):
 def q12(x):
         global state
         global cadena
-        
+
         ret = 1
         tokens.append(["OPERADOR_RELACIONAL",cadena,nroLinea])
         cadena = ""
@@ -261,7 +261,7 @@ def q12(x):
 def q13(x):
         global cadena
         global state
-        
+
         ret = 1
         tokens.append(["PUNTO_COMA",cadena,nroLinea])
         cadena = ""
@@ -272,14 +272,14 @@ def q14(x):
         ret = 0
         global cadena
         global state
-        
+
         if(x in letras):
 		char = 'letra'
 	elif(x in numeros):
 		char = 'numero'
 	else:
 		char = x
-	
+
         entrada={
 		'numero': 'q14',
 	        'letra': 'q14',
@@ -312,7 +312,7 @@ def q15(x):
 def q16(x):
         global state
         global cadena
-        
+
         ret = 1
         tokens.append(["OPERADOR_ARITMETICO",cadena,nroLinea])
         cadena =""
@@ -322,7 +322,7 @@ def q16(x):
 def q17(x):
         global state
         global cadena
-        
+
         ret = 1
         tokens.append(["OPERADOR_ARITMETICO",cadena,nroLinea])
         cadena =""
@@ -332,7 +332,7 @@ def q17(x):
 def q18(x):
         global cadena
         global state
-        
+
         ret = 1
         tokens.append(["OPERADOR_TERMINO",cadena,nroLinea])
         cadena = ""
@@ -342,7 +342,7 @@ def q18(x):
 def q19(x):
         global cadena
         global state
-        
+
         ret = 1
         tokens.append(["OPERADOR_TERMINO",cadena,nroLinea])
         cadena = ""
@@ -362,7 +362,7 @@ def q20(x):
 def q21(x):
         global cadena
         global state
-        
+
         ret = 1
         tokens.append(["PARENTESIS_A",cadena,nroLinea])
         cadena = ""
@@ -373,7 +373,7 @@ def q21(x):
 def q22(x):
         global cadena
         global state
-        
+
         ret = 1
         tokens.append(["PARENTESIS_C",cadena,nroLinea])
         cadena = ""
@@ -384,7 +384,7 @@ def q23(x):
         ret = 0
         global cadena
         global state
-        
+
         cadena = cadena + x
         entrada={
                 '=' : 'q24'
@@ -423,7 +423,7 @@ def q26(x):
         state = 'q0'
         global cadena
         cadena = cadena[:-1]
-        tokens.append(["DOS_PUNTOS",cadena,nroLinea])        
+        tokens.append(["DOS_PUNTOS",cadena,nroLinea])
         cadena = ""
         return ret
 
@@ -431,10 +431,10 @@ def q27(x):
         ret = 1
 	global state
         global cadena
-        
+
         state = 'q0'
         cadena = cadena[:-1]
-        tokens.append(["COMA",cadena,nroLinea])        
+        tokens.append(["COMA",cadena,nroLinea])
         cadena = ""
         return ret
 
@@ -448,7 +448,7 @@ def process(line):
         global error
         if(args.verbose_mode):
 		print "Longitud de Linea: " + repr(len(line))
-		  
+
         #Revision caracter a caracter de la linea
         while i <= (len(line)):
                 if(i < len(line)):
@@ -505,28 +505,28 @@ estados = {
         'q27': q27,
 	}
 
-                                         
+
 def main():
 	global nroLinea
 	global tokens
-	                    
-	#Procesamos el archivo linea por linea    
+
+	#Procesamos el archivo linea por linea
 	nroLinea=1
 	with open(args.archivo) as f:
 	    for line in f:
 			tokens.append(process(line))
 	                nroLinea += 1
 	f.close()
-	
+
 	tokens = [x for x in tokens if x is not None]
 	#Corroboramos EOF y Comentario abierto
 	if bandera:
 		error.append("[EOF] Final de archivo inesperado: Comentario no finalizado") #hay que pensar si puede haber mas de un error como tratarlo quizas imprimir un error por linea y enumerarlos
-	        
+
 	#Salida de Tokens
 	if(args.verbose_mode):
 	        print tokens
-	
+
 	#Guardando archivo .tokens
 	with open(args.archivo+'.tokens', 'w') as file:
 	        for t in tokens:
@@ -543,20 +543,19 @@ def main():
 	        print "Analisis lexico finalizado. No hay errores detectados"
 
 def analizarArchivo(archiv,verboso):
-	#Procesamos el archivo linea por linea    
+	#Procesamos el archivo linea por linea
 	global nroLinea
 	global tokens
 	global archivo
-	
-        archivo = archiv
+	archivo = archiv
 	nroLinea=1
-	
+
         #Corroboramos EOF y Comentario abierto
-	        
+
 	#Salida de Tokens
 	#if(verboso):
 	#        print tokens
-	
+
 	#Corroboramos la existencia de errores y los reportamos
 	#if(error):
 	#        print "ERRORES DETECTADOS EN ANALISIS LEXICO: "+ repr(len(error))
@@ -565,41 +564,35 @@ def analizarArchivo(archiv,verboso):
 	#        os.system('kill %d' % os.getpid())
 	#else:
 	#        print "Analisis lexico finalizado. No hay errores detectados"
-	
-	
+
+
 def siguientePreanalisis():
 	global nroLinea
 	global f
-        global archivo
-        global tokens
-        global lexema
+	global archivo
+	global tokens
+	global lexema
 
-        while len(tokens)==0:
-                if(f is None):
-                        f=open(archivo,"r")
-                nroLinea += 1
-                
-                linea = f.readline()
-                if(linea == ''):
-                        if bandera:
-                                error.append("[EOF] Final de archivo inesperado: Comentario no finalizado")
-                        return "EOF"
-                else:
-                        process(linea)
-                        
-                        
-        
-        t = (tokens.pop(0))
-        lexema = t[1].lower()
-        return t[0].lower()
+	while len(tokens)==0:
+		if(f is None):
+			f=open(archivo,"r")
+		nroLinea += 1
+		linea = f.readline()
+		if(linea == ''):
+			if bandera:
+				error.append("[EOF] Final de archivo inesperado: Comentario no finalizado")
+			return "EOF"
+		else:
+			process(linea)
+	t = (tokens.pop(0))
+	lexema = t[1].lower()
+	return t[0].lower()
 
 def inicializar(nombreArchivo):
-        global nroLinea
-        global archivo
-
-
-        nroLinea=0
-        archivo = nombreArchivo
+    global nroLinea
+    global archivo
+    nroLinea=0
+    archivo = nombreArchivo
 
 #Definicion de argumentos y pasaje de parametros.
 parser = argparse.ArgumentParser(description="Analizador Sintactico de Pascal Reducido")
@@ -612,7 +605,3 @@ if(args.standalone):
         main()
 else:
         inicializar(args.archivo)
-
-
- 		
-	
