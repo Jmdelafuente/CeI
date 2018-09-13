@@ -11,7 +11,7 @@ import argparse
 import os
 import analizadorLexico
 from tabla import Tabla
-from collections import OrderedDict
+
 #from analizadorLexico import lexema
 
 ###Variables globales
@@ -254,7 +254,7 @@ def sentencia():
 		match("parentesis_c")
 	elif(preanalisis == "identificador"):
 		ret = identificador()
-		if not asignacionollamada() == tablaActual[identificadoresActuales.pop()].tipo:
+		if not asignacionollamada() == tablaActual[identificadoresActuales.pop()]["tipo"]:
 			ret = "ERROR"
 	else:
 		reportar("Error de Sintaxis: se esperaba READ, WRITE, IF, WHILE o Identificador Valido",preanalisis,"sentencia")
@@ -339,14 +339,15 @@ def termino1(ret):
 
 def factor():
 	ret = "VOID"
+	parametros = {}
 	if verbose:
 		print("-->factor")
 	if (preanalisis == "identificador"):
 		identificador()
 		try:
 			id = tablaActual[identificadoresActuales.pop()]
-			if id.tipo in {"function","procedure"}:
-				parametros = id.parametros
+			if id["tipo"] in {"function","procedure"}:
+				parametros = id["parametros"]
 		except KeyError:
 			ret = "ERROR"
 		ret = llamada(parametros)
@@ -360,7 +361,7 @@ def factor():
 		match("parentesis_a")
 		identificador()
 		try:
-			ret = tablaActual[identificadoresActuales.pop()].tipo
+			ret = tablaActual[identificadoresActuales.pop()]["tipo"]
 		except KeyError:
 			#No existe el identificador
 			ret="ERROR"
@@ -417,8 +418,8 @@ def programa():
 		#programaRepPyf()
 		ret1 = declaracionPyfRep()
 		match("begin")
-		#ret2 = programaRepSentencia()
-		ret2 = sentenciaCompuesta()
+		ret2 = programaRepSentencia()
+		#ret2 = sentenciaCompuesta()
 		match("end")
 		match("punto")
 		if not(ret3 == "VOID" and ret1 == "VOID" and ret2 == "VOID"):
@@ -443,20 +444,20 @@ def declaracionVariableOpt():
 	return ret
 
 
-# def programaRepSentencia():
-# 	ret = "VOID"
-# 	if verbose:
-# 		print("-->programaRepSentencia")
-# 	caso1={"begin", "read", "write","while","if"}
-# 	if (preanalisis in caso1) or (preanalisis == "identificador"):
-# 		ret = compuesta()
-# 		if not programaRepSentencia() == ret:
-# 			ret = "ERROR"
-# 	elif verbose:
-# 		print('\033[93m'+"> Lambda")+'\033[0m'
-# 	if verbose:
-# 		print("<--programaRepSentencia")
-# 	return ret
+def programaRepSentencia():
+	ret = "VOID"
+	if verbose:
+		print("-->programaRepSentencia")
+	caso1={"begin", "read", "write","while","if"}
+	if (preanalisis in caso1) or (preanalisis == "identificador"):
+		ret = compuesta()
+		if not programaRepSentencia() == ret:
+			ret = "ERROR"
+	elif verbose:
+		print('\033[93m'+"> Lambda")+'\033[0m'
+	if verbose:
+		print("<--programaRepSentencia")
+	return ret
 
 def expresionGeneral():
 	if verbose:
@@ -480,7 +481,7 @@ def expresionGeneral1(ret):
 		print("-->expresionGeneral1")
 	if preanalisis == "or":
 		match("or")
-		if not(expresionGeneral(ret)==ret):
+		if not(expresionGeneral()==ret):
 			ret = "ERROR"
 		else:
 			ret = "BOOLEAN"
@@ -527,11 +528,10 @@ def ifthen():
 		print("-->ifthen")
 	if preanalisis == "if":
 		match("if")
-		if(expresionGeneral() == "BOOLEAN"):
-			match("then")
-			ret = ifthen1()
-		else:
+		if not(expresionGeneral() == "BOOLEAN"):
 			ret = "ERROR"
+		match("then")
+		ret = ifthen1()
 	else:
 		reportar("Error de sintaxis: se esperaba IF expresion THEN",preanalisis,"ifthen")
 	if verbose:
@@ -607,18 +607,11 @@ def declaracionPyf():
 		nombreSubprograma = identificadoresActuales[0] #guardamos temporalmente el nombre del subprograma
 		generarEntradas("procedure") #generamos la entrada en la Tabla de Simbolos para el subprograma
 		#Semantico: Cambio de ambito: de Program a Procedure -lectura de parametros-
-		#tablaActual = tablaActual.new_child() #generamos un contexto para guardar los parametros
-		tablaParent = tablaActual
-		tablaActual = OrderedDict()
+		tablaActual = tablaActual.new_child() #generamos un contexto para guardar los parametros
 		#Sintactico
 		ret = parametrosFormales()
 		#Semantico: Los parametros deben figurar como variables en el contexto del procedure que es el nuevo actual
-		tablaParent[nombreSubprograma].update({"parametros":OrderedDict(tablaActual.items())}) #guardamos los parametros en la Tabla de Simbols del padre
-		#Definimos la tabla para el subprograma y le asignamos los parametros ordenados
-		parametros = tablaActual
-		tablaActual = tablaParent.new_child()
-		tablaActual.upgrade(parametros)
-		
+		tablaActual.parent[nombreSubprograma].update({"parametros":dict(tablaActual.map.items())}) #guardamos los parametros en la Tabla de Simbols del padre
 		#Sintactico
 		match("punto_coma")
 		ret1 = declaracionVariableOpt()
@@ -638,11 +631,11 @@ def declaracionPyf():
 		variableRetorno = identificadoresActuales
 		generarEntradas("function")
 		#Semantico: Cambio de contexto: de Program a Function
-		tablaActual = OrderedDict(tablaActual.new_child())
+		tablaActual = tablaActual.new_child()
 		#Sintactico
 		ret1 = parametrosFormales()
 		#Semantico: Los parametros deben figurar como variables en el contexto del procedure que es el nuevo actual
-		tablaActual.parent[nombreSubprograma].update({"parametros":OrderedDict(tablaActual.map.items())}) #guardamos los parametros en la Tabla de Simbols del padre
+		tablaActual.parent[nombreSubprograma].update({"parametros":dict(tablaActual.map.items())}) #guardamos los parametros en la Tabla de Simbols del padre
 		match("dos_puntos")
 		#Semantico: Definimos la variable de retorno para ser insertada con su tipo de Variable
 		identificadoresActuales = variableRetorno

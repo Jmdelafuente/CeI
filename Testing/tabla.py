@@ -3,6 +3,7 @@
 
 from collections import MutableMapping
 from itertools import chain, imap
+from collections import OrderedDict
 
 class Tabla(MutableMapping):
     ''' Tabla que permite Ambientes anidados -- una cadena de objetos.
@@ -22,23 +23,23 @@ class Tabla(MutableMapping):
     len(d)                  Cantidad de valores anidados
     d.items()               TODOS los valores anidados
 
-    Las modificaciones (como sets y deletes) están restringidas a la tabla actual 
-    cuando "enable_nonlocal" está establecido en False (valor predeterminado). 
+    Las modificaciones (como sets y deletes) están restringidas a la tabla actual
+    cuando "enable_nonlocal" está establecido en False (valor predeterminado).
     Entonces c[k]=v siempre escribe en self.map, en la tabla actual.
 
     Pero con "enable_nonlocal" establecido en True, la variable en la clausura de la tabla
 	se pueden modificar. Por ejemplo, para implementar ambientes editables para nonlocals:
-	
+
         nonlocals = c.parent.new_child(enable_nonlocal=True)
         nonlocals['y'] = 10     #sobrescribir la entrada existente en un ambiente anidado # overwrite existing entry in a nested scope
 
 	Para emular los valores globals() de Python, leer y modificar desde la tabla raíz:
-    
+
         globals = c.root        #buscar la tabla más externa #look-up the outermost enclosing context
         globals['x'] = 10       # asignar directamente a ese tabla #assign directly to that context
 
-    Para implementar el alcance dinámico (donde las funciones pueden leer el 
-    espacio de nombres de su intermediario), las tablas secundarias se pasan como un 
+    Para implementar el alcance dinámico (donde las funciones pueden leer el
+    espacio de nombres de su intermediario), las tablas secundarias se pasan como un
     argumento en una llamada a función:
 
         def f(ctx):
@@ -54,7 +55,7 @@ class Tabla(MutableMapping):
         'Crear nuevo contexto Raiz'
         self.parent = parent
         self.enable_nonlocal = enable_nonlocal
-        self.map = {}
+        self.map = OrderedDict()
         self.maps = [self.map]
         if parent is not None:
             self.maps += parent.maps
@@ -102,5 +103,3 @@ class Tabla(MutableMapping):
 
     def __repr__(self, repr=repr):
         return ' -> '.join(imap(repr, self.maps))
-
-
