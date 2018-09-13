@@ -29,6 +29,11 @@ preanalisisAnterior=""
 global posicion
 posicion=0
 
+#Definicion de palabras palabras reservadas
+global palabrasReservadas
+palabrasReservadas=["BEGIN","BOOLEAN","END","WHILE","TRUE","FALSE","IF","ELSE","PROGRAM","DO","THEN","FUNCTION","INTEGER","PROCEDURE","READ","VAR","WRITE"]
+
+
 ##Variables para Analisis Semántico
 #Tabla de Simbolos y entrada actual
 global tablaSimbolos
@@ -37,6 +42,8 @@ global tablaActual
 tablaActual = None
 global identificadoresActuales
 identificadoresActuales=list()
+
+
 
 #Definicion de casos posibles
 
@@ -97,10 +104,12 @@ def listaVariables():
 		ret = listaIdentificador()
 		match("dos_puntos")
 		if not(tipoVariables() == ret):
-			ret = "ERROR"
+			#ret = "Error"
+			reportar("Error en los identificadores de la definición. ",preanalisis,"listaVariables","Semantico")
 		match('punto_coma')
 		if not(listaVariablesRep() == ret):
-			ret = "ERROR"
+			reportar("Error en los identificadores de la definición.  ",preanalisis,"listaVariables","Semantico")
+			#ret = "Error"
 	else:
 		reportar("Error de Sintaxis: se esperaba un identificador valido",preanalisis,"listaVariables")
 	if verbose:
@@ -130,7 +139,8 @@ def listaIdentificador():
 	if(preanalisis == "identificador"):
 		ret = identificador()
 		if not(listaIdentificadorRep() == ret):
-			ret = "ERROR"
+			reportar("Error en los identificadores de la definición. ",preanalisis,"listaIdentificador","Semantico")
+			#ret = "Error"
 	else:
 		reportar("Error de Sintaxis: se esperaba un identificador valido",preanalisis,"listaIdentificador")
 	if verbose:
@@ -145,7 +155,8 @@ def listaIdentificadorRep():
 		match("coma")
 		ret = identificador()
 		if not listaIdentificadorRep()== ret:
-			ret = "ERROR"
+			reportar("Error en los identificadores de la definición. ",preanalisis,"listaIdentificadorRep","Semantico")
+			#ret = "Error"
 	elif verbose:
 		print('\033[93m'+"> Lambda")+'\033[0m'
 	if verbose:
@@ -195,7 +206,8 @@ def compuesta():
 	if ((preanalisis == "identificador") or (preanalisis in case1)):
 		ret = sentencia()
 		if not (sentenciaOptativa() == ret):
-			ret = "ERROR"
+			reportar("Error en el bloque de sentencias. ",preanalisis,"compuesta","Semantico")
+			#ret = "Error"
 	elif (preanalisis == "begin"):
 		ret = sentenciaCompuesta()
 	elif verbose:
@@ -250,15 +262,20 @@ def sentencia():
 		try:
 			tablaActual[identificadoresActuales.pop()]
 		except KeyError:
-			ret = "ERROR"
+			reportar("Se esperaba un identificador valido. ",preanalisis,"sentencia","Semantico")
+			#ret = "Error"
 		match("parentesis_c")
 	elif(preanalisis == "identificador"):
 		ret = identificador()
+		id = identificadoresActuales.pop()
+		ret = asignacionollamada()
 		try:
-			if not asignacionollamada() == tablaActual[identificadoresActuales.pop()]["tipo"]:
-				ret = "ERROR"
+			if not  ret == tablaActual[id]["tipo"]:
+				reportar("El identificador "+repr(id)+" no es del tipo correcto. Se esperaba un "+ repr(tablaActual[id]["tipo"]),tablaActual[id]["tipo"],"sentencia","Semantico")
+				#ret = "Error"
 		except KeyError:
-			ret = "ERROR"
+			reportar("El identificador "+repr(id)+" no esta definido. ",preanalisis,"generarVariables","Semantico")
+			#ret = "Error"
 	else:
 		reportar("Error de Sintaxis: se esperaba READ, WRITE, IF, WHILE o Identificador Valido",preanalisis,"sentencia")
 	if verbose:
@@ -291,7 +308,7 @@ def expresionAritmetica():
 		ret = termino()
 		ret = expresionAritmetica1(ret)
 	else:
-		reportar("Error de sintaxis: se esperaba READ, WRITE, TRUE, FALSE, Identificador valido o digitos",preanalisis,"expresionAritmetica1")
+		reportar("Error de sintaxis: se esperaba READ, WRITE, TRUE, FALSE, Identificador valido o digitos",preanalisis,"expresionAritmetica")
 	if verbose:
 		print("<--expresionAritmetica")
 	return ret
@@ -303,7 +320,8 @@ def expresionAritmetica1(ret):
 		match("operador_aritmetico")
 		ret2 = termino()
 		if not(ret == "INTEGER" and ret2=="INTEGER"):
-			ret = "ERROR"
+			reportar("La operación se encuentra definida para tipos INTEGER. ",preanalisis,"expresionAritmetica1","Semantico")
+			#ret = "Error"
 		ret = expresionAritmetica1(ret)
 	elif verbose:
 		print('\033[93m'+"> Lambda")+'\033[0m'
@@ -332,7 +350,8 @@ def termino1(ret):
 		match("operador_termino")
 		if not factor()==ret:
 			#No son de tipo compatible
-			ret = "ERROR"
+			reportar("Tipo Incompatible: el operador se encuentra definido para tipos INTEGER. ",preanalisis,"termino1","Semantico")
+			#ret = "Error"
 		termino1(ret)
 	elif verbose:
 		print('\033[93m'+"> Lambda")+'\033[0m'
@@ -352,7 +371,8 @@ def factor():
 			if id["tipo"] in {"function","procedure"}:
 				parametros = id["parametros"]
 		except KeyError:
-			ret = "ERROR"
+			reportar("Error: el identificador "+repr(id)+" no se encuentra definido. ",preanalisis,"termino1","Semantico")
+			#ret = "Error"
 		ret = llamada(parametros)
 	elif (preanalisis == "write"):
 		match("write")
@@ -363,10 +383,11 @@ def factor():
 		match("read")
 		match("parentesis_a")
 		identificador()
+		id = identificadoresActuales.pop()
 		try:
-			ret = tablaActual[identificadoresActuales.pop()]["tipo"]
+			ret = tablaActual[id]["tipo"]
 		except KeyError:
-			#No existe el identificador
+			reportar("Error: el identificador "+str(id)+ "no existe. ",preanalisis,"termino1","Semantico")
 			ret="ERROR"
 		match("parentesis_c")
 	elif preanalisis == "numero" or preanalisis == "operador_aritmetico":
@@ -426,7 +447,8 @@ def programa():
 		match("end")
 		match("punto")
 		if not(ret3 == "VOID" and ret1 == "VOID" and ret2 == "VOID"):
-			ret = "ERROR"
+			reportar("Existen multiples errores semanticos dentro del programa. ",preanalisis,"programa","Semantico")
+			#ret = "Error"
 	else:
 		reportar("Error de sintaxis: debe comenzar con la sentencia PROGRAM Identificador",preanalisis,"programa")
 	if verbose:
@@ -454,8 +476,9 @@ def programaRepSentencia():
 	caso1={"begin", "read", "write","while","if"}
 	if (preanalisis in caso1) or (preanalisis == "identificador"):
 		ret = compuesta()
-		if not programaRepSentencia() == ret:
-			ret = "ERROR"
+		programaRepSentencia()
+		#if not programaRepSentencia() == ret:
+			#ret = "Error"
 	elif verbose:
 		print('\033[93m'+"> Lambda")+'\033[0m'
 	if verbose:
@@ -485,7 +508,8 @@ def expresionGeneral1(ret):
 	if preanalisis == "or":
 		match("or")
 		if not(expresionGeneral()==ret):
-			ret = "ERROR"
+			reportar("Tipo Incompatible: el operador se encuentra definido para tipos BOOLEAN. ",preanalisis,"expresionGeneral1","Semantico")
+			#ret = "Error"
 		else:
 			ret = "BOOLEAN"
 	elif verbose:
@@ -500,7 +524,8 @@ def expresionRelacional(ret):
 	if(preanalisis  == "operador_relacional"):
 		operadorRelacional()
 		if not ret == expresionAritmetica():
-			ret = "ERROR"
+			reportar("Tipo Incompatible: el operador se encuentra definido para tipos INTEGER. ",preanalisis,"expresionRelacional","Semantico")
+			#ret = "Error"
 		else:
 			ret = "BOOLEAN"
 	elif verbose:
@@ -516,8 +541,9 @@ def compararAnd(ret):
 		match("and")
 		no()
 		ret2 = expresionAritmetica()
-		if not(expresionRelacional(ret2) == ret):
-			ret = "ERROR"
+		expresionRelacional(ret2)
+		#if not(expresionRelacional(ret2) == ret):
+			#ret = "Error"
 		compararAnd(ret)
 	elif verbose:
 		print('\033[93m'+"> Lambda")+'\033[0m'
@@ -532,7 +558,8 @@ def ifthen():
 	if preanalisis == "if":
 		match("if")
 		if not(expresionGeneral() == "BOOLEAN"):
-			ret = "ERROR"
+			reportar("Error: Tipo Incompatible: la condicion del IF debe ser de tipo BOOLEAN. ",preanalisis,"ifthen","Semantico")
+			#ret = "Error"
 		match("then")
 		ret = ifthen1()
 	else:
@@ -551,11 +578,13 @@ def ifthen1():
 		ret = compuesta()
 		match("end")
 		if not alternativa() == ret:
-			ret = "ERROR"
+			reportar("Error: existen errores semanticos en las expresiones",preanalisis,"ifthen1","Semantico")
+			#ret = "Error"
 	elif ((preanalisis in caso2) or (preanalisis == "identificador")):
 		ret = sentencia()
 		if not alternativa()==ret:
-			ret = "ERROR"
+			reportar("Error: existen errores semanticos en las expresiones",preanalisis,"ifthen1","Semantico")
+			#ret = "Error"
 	else:
 		reportar("Error de sintaxis: se esperaba WRITE,READ,WHILE,IF,BEGIN o Identificador valido",preanalisis,"ifthen1")
 	if verbose:
@@ -583,11 +612,13 @@ def mientras():
 	if ( preanalisis == "while"):
 		match("while")
 		if not(expresionGeneral()=="BOOLEAN"):
-			ret = "ERROR"
+			reportar("Error: Error de Tipo: la condicion del WHILE debe ser de tipo BOOLEAN.",preanalisis,"mientras","Semantico")
+			#ret = "Error"
 		match("do")
 		if (ret == "VOID"):
 			ret = sentenciaCompuesta()
 		else:
+			reportar("Error: existen errores semanticos en las expresiones internas del WHILE.",preanalisis,"ifthen1","Semantico")
 			sentenciaCompuesta()
 	else:
 		reportar("Error de sintaxis: se esperaba WHILE",preanalisis,"mientras")
@@ -621,7 +652,8 @@ def declaracionPyf():
 		ret2 = declaracionPyfRep()
 		ret3 = sentenciaCompuesta()
 		if not(ret == "VOID" and ret1 == "VOID" and ret2 == "VOID" and not(ret3 == "ERROR")):
-			ret = "ERROR"
+			reportar("Error: existen errores semanticos en la definicion del PROCEDURE "+str(nombreSubprograma),preanalisis,"declaracionPyf","Semantico")
+			#ret = "Error"
 		#Semantico: Cambio de contexto: desapilo la tabla procedure
 		identificadoresActuales=[]
 		tablaActual = tablaActual.parent
@@ -649,7 +681,8 @@ def declaracionPyf():
 		ret2 = declaracionPyfRep()
 		ret3 = sentenciaCompuesta()
 		if not(ret1 == "VOID" and ret2 == "VOID" and not(ret3 == "ERROR")):
-			ret = "ERROR"
+			reportar("Error: existen errores semanticos en la definicion del FUNCTION "+str(nombreSubprograma),preanalisis,"declaracionPyf","Semantico")
+			#ret = "Error"
 		#Semantico: Cambio de contexto: desapilo la tabla de function
 		identificadoresActuales=[]
 		tablaActual = tablaActual.parent
@@ -667,10 +700,12 @@ def parametrosFormales():
 		match("parentesis_a")
 		ret = listaIdentificador()
 		match("dos_puntos")
-		if not(tipoVariables() == ret):
-			ret = "ERROR"
-		if not(parametrosFormalesRep() == "VOID"):
-			ret = "ERROR"
+		tipoVariables()
+		#if not(tipoVariables() == ret):
+			#ret = "Error"
+		parametrosFormalesRep()
+		#if not(parametrosFormalesRep() == "VOID"):
+			#ret = "Error"
 		match("parentesis_c")
 	elif verbose:
 		print('\033[93m'+"> Lambda")+'\033[0m'
@@ -697,6 +732,7 @@ def declaracionPyfRep():
 	if ( preanalisis == "function" or preanalisis == "procedure"):
 		ret = declaracionPyf()
 		if not(declaracionPyfRep() == ret):
+			reportar("Error: "+preanalisis+" semanticamente incorrecto ", preanalisis,"parametrosReales","Semantico")
 			ret == "ERROR"
 	elif verbose:
 		print('\033[93m'+"> Lambda")+'\033[0m'
@@ -727,14 +763,16 @@ def parametrosReales(parametros):
 	if ( preanalisis == "coma"):
 		match("coma")
 		ret = expresionGeneral()
-		try:
-			if not ret == parametros.popitem(False).tipo:
-					#Tipo de parametro incorrecto
-					ret="ERROR"
-			parametrosReales(parametros)
-		except IndexError:
-			#Cantidad de parametros incorrecta
-			ret="ERROR"
+		#try:
+		parametroActual = parametros.popitem(False).tipo
+		if not ret == parametroActual:
+				#Tipo de parametro incorrecto
+				reportar("Error: El parametro "+repr(preanalisis)+" es de tipo incorrecto. Se esperaba "+parametroActual, preanalisis,"parametrosReales","Semantico")
+				ret="ERROR"
+		parametrosReales(parametros)
+		# except IndexError:
+		# 	#Cantidad de parametros incorrecta
+		# 	ret="ERROR"
 	elif verbose:
 		print('\033[93m'+"> Lambda")+'\033[0m'
 	if verbose:
@@ -749,12 +787,15 @@ def llamada(parametros):
 		match("parentesis_a")
 		ret = expresionGeneral()
 		try:
-			if not ret == parametros.popitem(False).tipo:
+			parametroActual = parametros.popitem(False).tipo
+			if not ret == parametroActual:
 				#Tipo de parametro incorrecto
+				reportar("Error: El parametro "+repr(preanalisis)+" es de tipo incorrecto. Se esperaba "+parametroActual, preanalisis,"llamada","Semantico")
 				ret="ERROR"
 			parametrosReales(parametros)
 		except IndexError:
 			#Cantidad de parametros incorrecta
+			reportar("Error: Cantidad de parametros incorrecto. Se esperaban "+str(len(parametros)), preanalisis,"llamada","Semantico")
 			ret="ERROR"
 		match("parentesis_c")
 	elif verbose:
@@ -786,7 +827,7 @@ def reportar(tipoError,simbolo,metodo,tipoReporte="Sintactico"):
 	if tipoReporte=="Sintactico":
 		err = "["+str(analizadorLexico.nroLinea)+"] "+tipoError+ " en la expresion "+ repr(preanalisis)+" despues de "+ repr(preanalisisAnterior)+"\n"
 	elif tipoReporte=="Semantico":
-		err = "["+str(analizadorLexico.nroLinea)+"] "+tipoError+ " ya definido antes de definirse como "+ repr(preanalisis)+"\n"
+		err = "["+str(analizadorLexico.nroLinea)+"] "+tipoError+"\n"
 	if(args.standalone):
 		print err
 		exit(0)
@@ -869,6 +910,7 @@ def procesar():
 		error = list(set(error))
 		print '\033[91m'+"ERRORES DETECTADOS: "+ repr(len(error))
 		print '\033[93m'+"[Nro de Linea] Descripcion del error"+'\033[0m'
+		error.sort()
 		for e in error:
 			print e
 		os.system('kill %d' % os.getpid())
@@ -884,7 +926,7 @@ def generarEntradas(tipo):
 		#si el identificador existe: añadimos el error
 		try:
 			tablaActual.map[identificador]
-			reportar("Identificador "+repr(identificador)+" ya definido",identificador,"generarVariables","Semantico")
+			reportar("Identificador "+repr(identificador)+" ya definido anteriormente",identificador,"generarVariables","Semantico")
 		#El identificador no existe
 		except KeyError:
 			tablaActual[identificador]={"tipo":tipo}
