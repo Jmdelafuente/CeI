@@ -254,7 +254,10 @@ def sentencia():
 		match("parentesis_c")
 	elif(preanalisis == "identificador"):
 		ret = identificador()
-		if not asignacionollamada() == tablaActual[identificadoresActuales.pop()]["tipo"]:
+		try:
+			if not asignacionollamada() == tablaActual[identificadoresActuales.pop()]["tipo"]:
+				ret = "ERROR"
+		except KeyError:
 			ret = "ERROR"
 	else:
 		reportar("Error de Sintaxis: se esperaba READ, WRITE, IF, WHILE o Identificador Valido",preanalisis,"sentencia")
