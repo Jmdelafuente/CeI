@@ -6,13 +6,14 @@ import argparse
 import sys
 from analizadorLexico import inicializar
 
+global verboso_lexico
 
 #Definicion de argumentos y pasaje de parametros.
 
 parser = argparse.ArgumentParser(description="Compilador de Pascal Reducido", epilog="Compilador para Pascal Reducido desarrollado en Python para las materias de Diseño de Compiladores e Interpretes y Laboratorio de Compiladores e Interpretes. \n Facultad de Informatica - Universidad Nacional del Comahue. \n Distribuido bajo licencia GNUv3. https://github.com/Jmdelafuente22/CeI")
 parser.add_argument("archivo", metavar='archivo.pas' ,help="Ruta relativa del fichero a analizar sintacticamente.", type=str)
-parser.add_argument("-verbose_mode","-v", help="Flag para modo Verboso con impresiones de control.",action='store_true')
-parser.add_argument("-standalone","-s", help="Flag para funcionamiento por separado del aplicativo.",action='store_true')
+parser.add_argument("-v","--verbose_mode", help="Modo Verboso con impresiones de control: -v para Semantico y Sintactico y -vv para maxima expresividad", action="count", default=0)
+parser.add_argument("-s","--standalone", help="Flag para funcionamiento por separado del aplicativo.",action='store_true')
 args = parser.parse_args()
 
 archivo= args.archivo
@@ -20,15 +21,17 @@ verboso= args.verbose_mode
 standalone = args.standalone
 
 #Llamada para inicializar el analizador Lexico
-if(verboso):
+if(verboso>1):
+	verboso_lexico = True
 	sys.argv = ['analizadorLexico.py',archivo,'-v']
 else:
+	verboso_lexico = False
 	sys.argv = ['analizadorLexico.py',archivo]
 
 if(standalone):
 	sys.argv.append('-s')
 
-inicializar(archivo)
+inicializar(archivo,verboso_lexico)
 
 execfile('analizadorLexico.py')
 #LLamada para lanzar el analizador Sintactico
