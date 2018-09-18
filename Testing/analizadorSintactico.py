@@ -5,8 +5,7 @@
 #Year: 2018
 #License: GNU GPLv3. See LICENSE file for more information.'''
 
-#import string
-#import random
+import fnmatch
 import argparse
 import os
 import analizadorLexico
@@ -292,11 +291,11 @@ def sentencia():
             #ret = "Error"
         match("parentesis_c")
     elif(preanalisis == "identificador"):
-        ret = identificador()
+        identificador()
         id = identificadoresActuales.pop()
-        ret = asignacionollamada()
+        ret = asignacionollamada(id)
         try:
-            if not ret == tablaActual[id]["tipo"]:
+            if not ret == (tablaActual[id]["tipo"].upper()):
                 reportar("El identificador " + repr(id) + " no es del tipo correcto.", tablaActual[id]["tipo"], "sentencia", "Semantico")
                 #ret = "Error"
         except KeyError:
@@ -311,15 +310,25 @@ def sentencia():
     return ret
 
 
-def asignacionollamada():
-    ret = "VOID"
+def asignacionollamada(id=None):
+    try:
+        ret = tablaActual[id]["tipo"].upper()
+    except KeyError:
+        reportar("El identificador " + repr(id) + " no esta definido. ",
+                 preanalisis, "generarVariables", "Semantico")
+        ret = "VOID"
     if verbose:
         print("-->asignacionollamada")
     if preanalisis == "asignacion":
         match("asignacion")
-        ret = expresionGeneral()
+        ret2 = expresionGeneral()
+        if (ret != ret2) and ret != "VOID":
+            print "+++++++++++++++++++ EL ERROR VIENE POR asignacionollamada"
+            print "RET:" + repr(ret)
+            print "RET2:" + repr(ret2)
+            reportar("El identificador " + repr(id) + " no es del tipo correcto.", id, "sentencia", "Semantico")
     elif preanalisis == "parentesis_a":
-        ret = llamada()
+        ret = llamada(tablaActual[id]["parametros"],tablaActual[id])
     elif preanalisis == "punto_coma":
         match("punto_coma")
     else:
@@ -419,9 +428,9 @@ def factor():
         try:
             if id["atributo"] in {"function", "procedure"}:
                 parametros = id["parametros"]
-            ret = llamada(parametros)
+            ret = llamada(parametros,id)
         except KeyError:
-            ret = llamada()
+            ret = llamada(None,id)
     elif (preanalisis == "write"):
         match("write")
         match("parentesis_a")
@@ -433,7 +442,7 @@ def factor():
         identificador()
         id = identificadoresActuales.pop()
         try:
-            ret = tablaActual[id]["tipo"]
+            ret = tablaActual[id]["tipo"].upper()
         except KeyError:
             reportar("Error: el identificador " + str(id) +
                      "no existe. ", preanalisis, "termino1", "Semantico")
@@ -491,17 +500,17 @@ def programa():
         generarEntradas("program")
         # Sintactico
         match("punto_coma")
-        ret3 = declaracionVariableOpt()
+        declaracionVariableOpt()
         # programaRepPyf()
-        ret1 = declaracionPyfRep()
+        declaracionPyfRep()
         match("begin")
-        ret2 = programaRepSentencia()
+        programaRepSentencia()
         #ret2 = sentenciaCompuesta()
         match("end")
         match("punto")
-        if not(ret3 == "VOID" and ret1 == "VOID" and ret2 == "VOID"):
-            reportar("Existen multiples errores semanticos dentro del programa. ",
-                     preanalisis, "programa", "Semantico")
+        #if not(ret3 == "VOID" and ret1 == "VOID" and ret2 == "VOID"):
+        #    reportar("Existen multiples errores semanticos dentro del programa. ",
+        #             preanalisis, "programa", "Semantico")
             #ret = "Error"
     else:
         reportar("Error de sintaxis: debe comenzar con la sentencia PROGRAM Identificador",
@@ -606,7 +615,10 @@ def compararAnd(ret):
         match("and")
         no()
         ret2 = expresionAritmetica()
-        expresionRelacional(ret2)
+        if(ret != ret2):
+            reportar("Tipo Incompatible: el operador AND se encuentra definido para tipos BOOLEAN. ",
+                     preanalisis, "compararAnd", "Semantico")
+        ret = expresionRelacional(ret2)
         # if not(expresionRelacional(ret2) == ret):
         #ret = "Error"
         compararAnd(ret)
@@ -646,22 +658,24 @@ def ifthen1():
         match("begin")
         ret = compuesta()
         match("end")
-        if not alternativa() == ret:
-            reportar("Error: existen errores semanticos en las expresiones",
-                     preanalisis, "ifthen1", "Semantico")
+        alternativa()
+        #if not alternativa() == ret:
+        #    reportar("Error: existen errores semanticos en las expresiones",
+        #             preanalisis, "ifthen1", "Semantico")
             #ret = "Error"
     elif ((preanalisis in caso2) or (preanalisis == "identificador")):
         ret = sentencia()
-        if not alternativa() == ret:
-            reportar("Error: existen errores semanticos en las expresiones",
-                     preanalisis, "ifthen1", "Semantico")
+        alternativa()
+        #if not alternativa() == ret:
+        #    reportar("Error: existen errores semanticos en las expresiones",
+        #             preanalisis, "ifthen1", "Semantico")
             #ret = "Error"
     else:
         reportar("Error de sintaxis: se esperaba WRITE,READ,WHILE,IF,BEGIN o Identificador valido",
                  preanalisis, "ifthen1")
     if verbose:
         print("<--ifthen1")
-
+    return ret
 
 def alternativa():
     ret = "VOID"
@@ -882,8 +896,9 @@ def parametrosReales(parametros):
     return ret
 
 
-def llamada(parametros=None):
-    ret = "VOID"
+def llamada(parametros=None,id = None):
+    #Semantico: tipo del identificador
+    ret = "VOID" if id == None else id["tipo"].upper()
     if verbose:
         print("-->llamada")
     if preanalisis == "parentesis_a":
@@ -943,7 +958,9 @@ def reportar(tipoError, simbolo, metodo, tipoReporte="Sintactico"):
         print err
         exit(0)
     else:
-        error.append(err)
+        filtered = fnmatch.filter(error, "*" + tipoError + "\n")
+        if not filtered:
+            error.append(err)
 
 
 def reportarMatch(tipoError, simbolo, simboloanterior, metodo):
