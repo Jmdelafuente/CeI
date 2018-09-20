@@ -20,6 +20,7 @@ procedure pa1(yy:boolean;xx:integer);
 var
 i,ii : integer;
 begin
+xx := i + ii;
 write(i+ii);
 end;
 
