@@ -582,6 +582,7 @@ def programaRepSentencia():
 
 
 def expresionGeneral():
+    ret2 = "VOID"
     if verbose:
         print("-->expresionGeneral")
     caso1 = {'false', 'true', 'parentesis_a',
