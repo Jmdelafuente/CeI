@@ -286,6 +286,9 @@ def sentencia():
             reportar("Se esperaba un identificador valido. ",
                      preanalisis, "sentencia", "Semantico")
             #ret = "Error"
+        except IndexError:
+            reportar("Se esperaba un identificador valido. ",
+                     preanalisis, "sentencia")
         match("parentesis_c")
     elif(preanalisis == "identificador"):
         identificador()
