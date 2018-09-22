@@ -55,6 +55,8 @@ f = None
 # Lexema del Token actual
 global lexema
 lexema = None
+global lexemaAnterior
+lexemaAnterior = None
 # Palabras reservadas
 global palabrasReservadas
 palabrasReservadas = ["BEGIN", "BOOLEAN", "END", "WHILE", "TRUE", "FALSE", "IF", "ELSE",
@@ -600,6 +602,7 @@ def siguientePreanalisis():
     global archivo
     global tokens
     global lexema
+    global lexemaAnterior
 
     if(f is None):
         f = open(archivo, "r")
@@ -614,6 +617,7 @@ def siguientePreanalisis():
         else:
             process(linea)
     t = (tokens.pop(0))
+    lexemaAnterior = lexema
     lexema = t[1].lower()
     return t[0].lower()
 

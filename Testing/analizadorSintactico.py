@@ -1029,7 +1029,7 @@ def reportar(tipoError, simbolo, metodo, tipoReporte="Sintactico"):
     if tipoReporte == "Sintactico":
         err = "[" + str(analizadorLexico.nroLinea) + "] " + tipoError + " en la expresion " + \
             repr(analizadorLexico.lexema) + " despues de " + \
-            repr(preanalisisAnterior) + "\n"
+            repr(analizadorLexico.lexemaAnterior) + "\n"
     elif tipoReporte == "Semantico":
         err = "[" + str(analizadorLexico.nroLinea) + "] " + tipoError + "\n"
     if(args.standalone):
