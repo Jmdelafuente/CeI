@@ -11,3 +11,6 @@ Testing/.vscode/.ropeproject/objectdb
 .idea/workspace.xml
 .idea/libraries/R_User_Library.xml
 Testing/tabla.pyc
+BatSemantico/*
+Pgm_Ejemplo/*
+.directory
