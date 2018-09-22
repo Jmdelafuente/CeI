@@ -458,7 +458,7 @@ def q27(x):
     global cadena
 
     state = 'q0'
-    cadena = cadena[:-1]
+    #cadena = cadena[:-1]
     tokens.append(["COMA", cadena, nroLinea])
     cadena = ""
     return ret
@@ -617,7 +617,7 @@ def siguientePreanalisis():
         else:
             process(linea)
     t = (tokens.pop(0))
-    lexemaAnterior = lexema
+    print lexemaAnterior
     lexema = t[1].lower()
     return t[0].lower()
 
