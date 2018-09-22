@@ -617,6 +617,7 @@ def siguientePreanalisis():
         else:
             process(linea)
     t = (tokens.pop(0))
+    lexemaAnterior = lexema
     lexema = t[1].lower()
     return t[0].lower()
 
