@@ -227,6 +227,7 @@ def compuesta():
         sentenciaOptativa()
     elif (preanalisis == "begin"):
         ret = sentenciaCompuesta()
+        compuesta()
     elif verbose:
         print('\033[93m' + "> Lambda") + '\033[0m'
     if verbose:
