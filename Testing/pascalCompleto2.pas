@@ -32,14 +32,14 @@ begin
 i:=i+ii;
 end;
 
-function pa3(ww:integer;www:integer;u:integer):boolean;
+function pas:boolean;
 var
 t:integer;
-t,u,v:boolean;
+t,parametro3,v:boolean;
 
 begin
 	a := 10<9;
-	p1 := true;
+	v := pas or true;
 end;
 
 BEGIN
@@ -50,6 +50,5 @@ if not(a > b) THEN
 else
 	e:=false;
 noidentado;
-
-
+a := a * b < true
 END.

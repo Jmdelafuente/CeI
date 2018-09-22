@@ -310,7 +310,7 @@ def sentencia():
     return ret
 
 
-def asignacionollamada(id=None):
+def asignacionollamada(id):
     try:
         ret = tablaActual[id]["tipo"].upper()
     except KeyError:
@@ -320,20 +320,30 @@ def asignacionollamada(id=None):
     if verbose:
         print("-->asignacionollamada")
     if preanalisis == "asignacion":
+        try:
+            if tablaActual[id]["atributo"] not in {"variable","retorno"}:
+                reportar("La asignación no es correcta. El identificador " + repr(id) + " no es asignable. Debe ser una variable ", id, "sentencia", "Semantico")
+        except KeyError:
+            reportar("El identificador " + repr(id) + " no esta definido. ",
+                     preanalisis, "generarVariables", "Semantico")
         match("asignacion")
         ret2 = expresionGeneral()
         if (ret != ret2) and ret != "VOID":
-            print "+++++++++++++++++++ EL ERROR VIENE POR asignacionollamada"
-            print "RET:" + repr(ret)
-            print "RET2:" + repr(ret2)
-            reportar("El identificador " + repr(id) + " no es del tipo correcto.", id, "sentencia", "Semantico")
+            reportar("La asignación no es correcta. El identificador " + repr(id) + " no es del tipo correcto.", id, "sentencia", "Semantico")
+
     elif preanalisis == "parentesis_a":
-        ret = llamada(tablaActual[id]["parametros"],tablaActual[id])
-    elif preanalisis == "punto_coma":
-        match("punto_coma")
-    else:
-        reportar("Error de sintaxis: se esperaba :=, (, o ;",
-                 preanalisis, "asignacionollamada")
+        parametros = tablaActual[id]["parametros"]
+        idLlamada = tablaActual[id]
+        if (tablaActual[id]["atributo"] == "retorno"):
+            parametros = tablaActual.parent[id]["parametros"]
+            idLlamada = tablaActual.parent[id]
+        print repr(idLlamada)
+        ret = llamada(parametros,idLlamada)
+    #elif preanalisis == "punto_coma":
+    #    match("punto_coma")
+    #else:
+    #    reportar("Error de sintaxis: se esperaba :=, (, o ;",
+    #             preanalisis, "asignacionollamada")
     if verbose:
         print("<--asignacionollamada")
     return ret
@@ -397,11 +407,11 @@ def termino1(ret):
     if verbose:
         print("-->termino1")
     if preanalisis == "operador_termino":
-        match("operador_termino")
         operador = analizadorLexico.lexema
+        match("operador_termino")
         if not factor() == ret:
             # No son de tipo compatible
-            reportar("Tipo Incompatible: el operador"+ str(operador) +"se encuentra definido para tipos INTEGER. ",
+            reportar("Tipo Incompatible: el operador "+ str(operador) +" se encuentra definido para tipos INTEGER. ",
                      preanalisis, "termino1", "Semantico")
             #ret = "Error"
         ret = termino1(ret)
@@ -415,22 +425,33 @@ def termino1(ret):
 def factor():
     ret = "VOID"
     parametros = {}
+    identificadorActual=""
     if verbose:
         print("-->factor")
     if (preanalisis == "identificador"):
         identificador()
         try:
-            id = tablaActual[identificadoresActuales.pop()]
+            identificadorActual = identificadoresActuales.pop()
+            id = tablaActual[identificadorActual]
         except KeyError:
-            reportar("Error: el identificador " + repr(id) +
+            reportar("Error: el identificador " + repr(identificadorActual) +
                      " no se encuentra definido. ", preanalisis, "termino1", "Semantico")
             #ret = "Error"
         try:
+            #print "LLEGUEEE"
+            #print repr(id)
             if id["atributo"] in {"function", "procedure"}:
+                parametros = id["parametros"]
+            elif id["atributo"] == "retorno":
+                id = tablaActual.parent[identificadorActual]
                 parametros = id["parametros"]
             ret = llamada(parametros,id)
         except KeyError:
             ret = llamada(None,id)
+        except UnboundLocalError:
+            reportar("Error: el identificador " + repr(identificadorActual) +
+                     " no se encuentra definido. ", preanalisis, "termino1", "Semantico")
+            ret = llamada()
     elif (preanalisis == "write"):
         match("write")
         match("parentesis_a")
@@ -594,9 +615,10 @@ def expresionRelacional(ret):
     if verbose:
         print("-->expresionAritmetica2")
     if(preanalisis == "operador_relacional"):
+        operador = analizadorLexico.lexema
         operadorRelacional()
         if not ret == expresionAritmetica():
-            reportar("Tipo Incompatible: los operadores relacionales se encuentran definidos para tipos INTEGER. ",
+            reportar("Tipo Incompatible: el operador "+ operador +" se encuentra definido para tipo INTEGER. ",
                      preanalisis, "expresionRelacional", "Semantico")
             #ret = "Error"
         else:
@@ -701,7 +723,7 @@ def mientras():
     if (preanalisis == "while"):
         match("while")
         if not(expresionGeneral() == "BOOLEAN"):
-            reportar("Error: Error de Tipo: la condicion del WHILE debe ser de tipo BOOLEAN.",
+            reportar("Error de Tipo: la condicion del WHILE debe ser de tipo BOOLEAN.",
                      preanalisis, "mientras", "Semantico")
             #ret = "Error"
         match("do")
@@ -744,7 +766,7 @@ def declaracionPyf():
         # Semantico: Los parametros deben figurar como variables en el contexto del procedure que es el nuevo actual
         # guardamos los parametros en la Tabla de Simbols del padre
         tablaActual.parent[nombreSubprograma].update(
-            {"parametros": dict(tablaActual.map.items())})
+            {"parametros": tablaActual.map.copy()})
         # Sintactico
         match("punto_coma")
         ret1 = declaracionVariableOpt()
@@ -774,12 +796,14 @@ def declaracionPyf():
         # Semantico: Los parametros deben figurar como variables en el contexto del procedure que es el nuevo actual
         # guardamos los parametros en la Tabla de Simbols del padre
         tablaActual.parent[nombreSubprograma].update(
-            {"parametros": dict(tablaActual.map.items())})
+            {"parametros": tablaActual.map.copy()})
         match("dos_puntos")
         # Semantico: Definimos la variable de retorno para ser insertada con su tipo de Variable
         identificadoresActuales = variableRetorno
         # Sintactico
         ret = tipoVariables()
+        #Semantico: definimos la variable con el nombre del subprograma como "retorno"
+        tablaActual[nombreSubprograma]["atributo"]="retorno"
         #Semantico: asignacion de tipo y atributo de la funcion en la tabla de simbolos
         tipoFuncion = tablaActual[nombreSubprograma]["tipo"]
         tablaActual.parent[nombreSubprograma].update({"atributo":"function"})
@@ -878,12 +902,22 @@ def parametrosReales(parametros):
     if (preanalisis == "coma"):
         match("coma")
         ret = expresionGeneral()
-        # try:
-        parametroActual = parametros.popitem(False).tipo
-        if not ret == parametroActual:
-                # Tipo de parametro incorrecto
-            reportar("Error: El parametro " + repr(preanalisis) + " es de tipo incorrecto. Se esperaba " +
-                     parametroActual, preanalisis, "parametrosReales", "Semantico")
+        try:
+            parametroActual = parametros.popitem(False)
+            identificadorActual = parametroActual[0]
+            tipoActual = parametroActual[1]["tipo"].upper()
+            if ret != tipoActual:
+                    # Tipo de parametro incorrecto
+                reportar("Error: El parametro formal " + repr(identificadorActual) + " es de tipo incorrecto. Se esperaba " +
+                         tipoActual, preanalisis, "parametrosReales", "Semantico")
+                ret = "ERROR"
+        except IndexError:
+            # Cantidad de parametros incorrecta
+            reportar("Error: Cantidad de parametros incorrecto. Se esperaban " +
+                     str(len(parametros)) + " parametros más ", preanalisis, "llamada", "Semantico")
+            ret = "ERROR"
+        except AttributeError:
+            reportar("Error: Cantidad de parametros incorrecto. No Se esperaban parametros", preanalisis, "llamada", "Semantico")
             ret = "ERROR"
         parametrosReales(parametros)
         # except IndexError:
@@ -891,6 +925,11 @@ def parametrosReales(parametros):
         # 	ret="ERROR"
     elif verbose:
         print('\033[93m' + "> Lambda") + '\033[0m'
+    else:
+        if parametros:
+            reportar("Error: Cantidad de parametros incorrecto. Se esperaban " +
+                 str(len(parametros)) + " parametros más", preanalisis, "llamada", "Semantico")
+            ret = "ERROR"
     if verbose:
         print("<--parametrosReales")
     return ret
@@ -901,25 +940,39 @@ def llamada(parametros=None,id = None):
     ret = "VOID" if id == None else id["tipo"].upper()
     if verbose:
         print("-->llamada")
+    #print repr(parametros) + " en linea " + str(analizadorLexico.nroLinea) + " con preanalisis " + repr(preanalisis)
     if preanalisis == "parentesis_a":
         match("parentesis_a")
-        ret = expresionGeneral()
+        ret2 = expresionGeneral()
         try:
-            parametroActual = parametros.popitem(False)["tipo"]
-            if not ret == parametroActual:
+            parametroActual = parametros.popitem(False)
+            identificadorActual = parametroActual[0]
+            tipoActual = parametroActual[1]["tipo"].upper()
+            if ret2 != tipoActual:
                 # Tipo de parametro incorrecto
-                reportar("Error: El parametro " + repr(preanalisis) + " es de tipo incorrecto. Se esperaba " +
-                         parametroActual, preanalisis, "llamada", "Semantico")
+                reportar("Error: El parametro formal " + repr(identificadorActual) + " es de tipo incorrecto. Se esperaba " +
+                         tipoActual, preanalisis, "llamada", "Semantico")
                 ret = "ERROR"
-            parametrosReales(parametros)
         except IndexError:
             # Cantidad de parametros incorrecta
             reportar("Error: Cantidad de parametros incorrecto. Se esperaban " +
-                     str(len(parametros)), preanalisis, "llamada", "Semantico")
+                     str(len(parametros)) + " parametros", preanalisis, "llamada", "Semantico")
             ret = "ERROR"
+        except AttributeError: #Si parametros = None, es decir se invoco llamada sin parametros
+            reportar("Error: Cantidad de parametros incorrecto. No Se esperaban parametros", preanalisis, "llamada", "Semantico")
+            ret = "ERROR"
+        except KeyError: #Si no requiere parametros y sin embargo tiene
+            reportar("Error: Cantidad de parametros incorrecto. No Se esperaban parametros", preanalisis, "llamada", "Semantico")
+            ret = "ERROR"
+        parametrosReales(parametros)
         match("parentesis_c")
     elif verbose:
         print('\033[93m' + "> Lambda") + '\033[0m'
+    else:
+        if parametros:
+            reportar("Error: Cantidad de parametros incorrecto. Se esperaban " +
+                 str(len(parametros))+" parametros más ", preanalisis, "llamada", "Semantico")
+            ret = "ERROR"
     if verbose:
         print("<--llamada")
     return ret
@@ -958,25 +1011,38 @@ def reportar(tipoError, simbolo, metodo, tipoReporte="Sintactico"):
         print err
         exit(0)
     else:
-        filtered = fnmatch.filter(error, "*" + tipoError + "\n")
-        if not filtered:
-            error.append(err)
+        if(err):
+            filtered = fnmatch.filter(error, "*" + tipoError + "\n")
+            filtered += fnmatch.filter(error, "*[" + str(analizadorLexico.nroLinea) + "*")
+            if not filtered:
+                error.append(err)
+            # error = list(set(error))
+            # print '\033[91m' + "ERRORES DETECTADOS: " + repr(len(error))
+            # print '\033[93m' + "[Nro de Linea] Descripcion del error" + '\033[0m'
+            # # Ordenamos los errores por linea donde aparecen
+            # error.sort()
+            # for e in error:
+            #     print e
+            # os.system('kill %d' % os.getpid())
 
 
 def reportarMatch(tipoError, simbolo, simboloanterior, metodo):
     global error
-    if(simboloanterior == preanalisis):
-        err = tipoError + " " + \
-            repr(preanalisis) + \
-            ". El archivo debe finalizar con END seguido de punto." + "\n"
-    else:
-        err = tipoError + " " + repr(preanalisis) + \
+    # if(simboloanterior == preanalisis):
+    #     err = tipoError + " " + \
+    #         repr(preanalisis) + \
+    #         ". El archivo debe finalizar con END seguido de punto." + "\n"
+    # else:
+    err = tipoError + " " + repr(preanalisis) + \
             " despues de " + repr(simboloanterior) + "\n"
     if(args.standalone):
         print err
         exit(0)
     else:
-        error.append(err)
+        filtered = fnmatch.filter(error, "*" + tipoError + "\n")
+        filtered += fnmatch.filter(error, "*[" + str(analizadorLexico.nroLinea) + "*")
+        if not filtered:
+            error.append(err)
 
 
 def between(value, a, b):
@@ -1072,7 +1138,7 @@ def generarEntradas(tipo):
                      identificador, "generarVariables", "Semantico")
         # El identificador no existe
         except KeyError:
-            tablaActual[identificador] = {"tipo": tipo}
+            tablaActual[identificador] = {"tipo": tipo , "atributo": "variable"}
             if(verbose):
                 print('\033[92m' + "[SEMANTICO] Nueva entrada: " +
                       repr(identificador) + " : " + repr(tipo) + '\033[0m')
