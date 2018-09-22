@@ -1058,8 +1058,8 @@ def reportarMatch(tipoError, simbolo, simboloanterior, metodo):
     #         repr(preanalisis) + \
     #         ". El archivo debe finalizar con END seguido de punto." + "\n"
     # else:
-    err = tipoError + " " + repr(preanalisis) + \
-            " despues de " + repr(simboloanterior) + "\n"
+    err = tipoError + " " + repr(analizadorLexico.lexema) + \
+            " despues de " + repr(analizadorLexico.lexemaAnterior) + "\n"
     if(args.standalone):
         print err
         exit(0)
