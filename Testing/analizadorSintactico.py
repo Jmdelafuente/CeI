@@ -225,10 +225,6 @@ def compuesta():
     if ((preanalisis == "identificador") or (preanalisis in case1)):
         ret = sentencia()
         sentenciaOptativa()
-        #if not (sentenciaOptativa() == ret):
-        #    reportar("Error en el bloque de sentencias. ",
-        #             preanalisis, "compuesta", "Semantico")
-        #    ret = "Error"
     elif (preanalisis == "begin"):
         ret = sentenciaCompuesta()
     elif verbose:
@@ -259,6 +255,7 @@ def no():
         print("-->no")
     if(preanalisis == "not"):
         match("not")
+        ret = "BOOLEAN"
     elif verbose:
         print('\033[93m' + "> Lambda") + '\033[0m'
     if verbose:
@@ -332,12 +329,20 @@ def asignacionollamada(id):
             reportar("La asignación no es correcta. El identificador " + repr(id) + " no es del tipo correcto.", id, "sentencia", "Semantico")
 
     elif preanalisis == "parentesis_a":
-        parametros = tablaActual[id]["parametros"]
-        idLlamada = tablaActual[id]
-        if (tablaActual[id]["atributo"] == "retorno"):
-            parametros = tablaActual.parent[id]["parametros"]
-            idLlamada = tablaActual.parent[id]
-        print repr(idLlamada)
+        parametros = None
+        idLlamada = None
+        try:
+            idLlamada = tablaActual[id]
+            parametros = tablaActual[id]["parametros"].copy()
+            if (tablaActual[id]["atributo"] == "retorno"):
+                parametros = tablaActual.parent[id]["parametros"].copy()
+                idLlamada = tablaActual.parent[id]
+        except KeyError:
+            reportar("El identificador " + repr(id) + " no esta definido. ",
+            preanalisis, "generarVariables", "Semantico")
+        except UnboundLocalError:
+            reportar("El identificador " + repr(id) + " no es subprograma. ",
+            preanalisis, "generarVariables", "Semantico")
         ret = llamada(parametros,idLlamada)
     #elif preanalisis == "punto_coma":
     #    match("punto_coma")
@@ -371,11 +376,12 @@ def expresionAritmetica1(ret):
     if verbose:
         print("-->expresionAritmetica1")
     if preanalisis == "operador_aritmetico":
+        operador = analizadorLexico.lexema
         match("operador_aritmetico")
         ret2 = termino()
         #print repr(analizadorLexico.nroLinea)+"ret2"+"--------------------------------------------->>>"+repr(ret2)
         if not(ret == "INTEGER" and ret2 == "INTEGER"):
-            reportar("La operación se encuentra definida para tipos INTEGER. ",
+            reportar("El operador "+operador+" se encuentra definido para tipos INTEGER. ",
                      preanalisis, "expresionAritmetica1", "Semantico")
             #ret = "Error"
         ret = expresionAritmetica1(ret2)
@@ -409,7 +415,7 @@ def termino1(ret):
     if preanalisis == "operador_termino":
         operador = analizadorLexico.lexema
         match("operador_termino")
-        if not factor() == ret:
+        if factor() != "INTEGER" or ret != "INTEGER":
             # No son de tipo compatible
             reportar("Tipo Incompatible: el operador "+ str(operador) +" se encuentra definido para tipos INTEGER. ",
                      preanalisis, "termino1", "Semantico")
@@ -441,10 +447,10 @@ def factor():
             #print "LLEGUEEE"
             #print repr(id)
             if id["atributo"] in {"function", "procedure"}:
-                parametros = id["parametros"]
+                parametros = id["parametros"].copy()
             elif id["atributo"] == "retorno":
                 id = tablaActual.parent[identificadorActual]
-                parametros = id["parametros"]
+                parametros = id["parametros"].copy()
             ret = llamada(parametros,id)
         except KeyError:
             ret = llamada(None,id)
@@ -579,18 +585,21 @@ def expresionGeneral():
              'operador_aritmetico', 'write', 'read', 'not'}  # ,'and'}
     if((preanalisis == "identificador") or (preanalisis == "numero") or (preanalisis in caso1)):
         # compararAnd()
-        no()
-        ret = expresionAritmetica()
-        ret = expresionRelacional(ret)
-        ret = compararAnd(ret)
-        ret = expresionGeneral1(ret)
+        ret = no()
+        ret2 = expresionAritmetica()
+        ret2 = expresionRelacional(ret2)
+        ret2 = compararAnd(ret2)
+        ret2 = expresionGeneral1(ret2)
+        if ret == "BOOLEAN" and ret2!="BOOLEAN":
+            reportar("Tipo Incompatible: el operador NOT se encuentra definido para tipos BOOLEAN. ",
+                     preanalisis, "expresionGeneral1", "Semantico")
     else:
         reportar("Error de sintaxis: se esperaba WRITE,READ,NOT,TRUE,FALSE,(,-,Digito o Identificador valido",
                  preanalisis, "expresionGeneral")
     if verbose:
         print("<--expresionGeneral")
     #print repr(analizadorLexico.nroLinea)+repr(ret)
-    return ret
+    return ret2
 
 
 def expresionGeneral1(ret):
@@ -598,7 +607,7 @@ def expresionGeneral1(ret):
         print("-->expresionGeneral1")
     if preanalisis == "or":
         match("or")
-        if not(expresionGeneral() == ret):
+        if not(expresionGeneral() == "BOOLEAN" and ret == "BOOLEAN"):
             reportar("Tipo Incompatible: el operador OR se encuentra definido para tipos BOOLEAN. ",
                      preanalisis, "expresionGeneral1", "Semantico")
             #ret = "Error"
@@ -617,7 +626,7 @@ def expresionRelacional(ret):
     if(preanalisis == "operador_relacional"):
         operador = analizadorLexico.lexema
         operadorRelacional()
-        if not ret == expresionAritmetica():
+        if ret != "INTEGER" or expresionAritmetica() != "INTEGER":
             reportar("Tipo Incompatible: el operador "+ operador +" se encuentra definido para tipo INTEGER. ",
                      preanalisis, "expresionRelacional", "Semantico")
             #ret = "Error"
@@ -635,15 +644,18 @@ def compararAnd(ret):
         print("-->compararAnd")
     if preanalisis == "and":
         match("and")
-        no()
+        ret3 = no()
         ret2 = expresionAritmetica()
-        if(ret != ret2):
+        ret2 = expresionRelacional(ret2)
+        if ret != "BOOLEAN" or ret2 != "BOOLEAN":
             reportar("Tipo Incompatible: el operador AND se encuentra definido para tipos BOOLEAN. ",
-                     preanalisis, "compararAnd", "Semantico")
-        ret = expresionRelacional(ret2)
+            preanalisis, "compararAnd", "Semantico")
         # if not(expresionRelacional(ret2) == ret):
         #ret = "Error"
         compararAnd(ret)
+        if ret3 == "BOOLEAN" and ret != "BOOLEAN":
+            reportar("Tipo Incompatible: el operador NOT se encuentra definido para tipos BOOLEAN. ",
+                     preanalisis, "compararAnd", "Semantico")
     elif verbose:
         print('\033[93m' + "> Lambda") + '\033[0m'
     if verbose:
@@ -722,17 +734,14 @@ def mientras():
         print("-->mientras")
     if (preanalisis == "while"):
         match("while")
-        if not(expresionGeneral() == "BOOLEAN"):
+        ret = expresionGeneral()
+        if  ret != "BOOLEAN":
             reportar("Error de Tipo: la condicion del WHILE debe ser de tipo BOOLEAN.",
                      preanalisis, "mientras", "Semantico")
             #ret = "Error"
         match("do")
-        if (ret == "VOID"):
-            ret = sentenciaCompuesta()
-        else:
-            reportar("Error: existen errores semanticos en las expresiones internas del WHILE.",
-                     preanalisis, "ifthen1", "Semantico")
-            sentenciaCompuesta()
+        ret = sentenciaCompuesta()
+        #sentenciaCompuesta()
     else:
         reportar("Error de sintaxis: se esperaba WHILE",
                  preanalisis, "mientras")
@@ -771,7 +780,11 @@ def declaracionPyf():
         match("punto_coma")
         ret1 = declaracionVariableOpt()
         ret2 = declaracionPyfRep()
-        ret3 = sentenciaCompuesta()
+        # ret3 = sentenciaCompuesta()
+        match("begin")
+        ret3 = programaRepSentencia()
+        match("end")
+        match("punto_coma")
         if not(ret == "VOID" and ret1 == "VOID" and ret2 == "VOID" and not(ret3 == "ERROR")):
             reportar("Error: existen errores semanticos en la definicion del PROCEDURE " +
                      str(nombreSubprograma), preanalisis, "declaracionPyf", "Semantico")
@@ -811,7 +824,11 @@ def declaracionPyf():
         match("punto_coma")
         ret1 = declaracionVariableOpt()
         ret2 = declaracionPyfRep()
-        ret3 = sentenciaCompuesta()
+        # ret3 = sentenciaCompuesta()
+        match("begin")
+        ret3 = programaRepSentencia()
+        match("end")
+        match("punto_coma")
         if not(ret1 == "VOID" and ret2 == "VOID" and not(ret3 == "ERROR")):
             reportar("Error: existen errores semanticos en la definicion del FUNCTION " +
                      str(nombreSubprograma), preanalisis, "declaracionPyf", "Semantico")
@@ -917,7 +934,10 @@ def parametrosReales(parametros):
                      str(len(parametros)) + " parametros más ", preanalisis, "llamada", "Semantico")
             ret = "ERROR"
         except AttributeError:
-            reportar("Error: Cantidad de parametros incorrecto. No Se esperaban parametros", preanalisis, "llamada", "Semantico")
+            reportar("Error: Cantidad de parametros incorrecto. No se esperaban parametros", preanalisis, "llamada", "Semantico")
+            ret = "ERROR"
+        except KeyError: #Si no requiere parametros y sin embargo tiene
+            reportar("Error: Cantidad de parametros incorrecto. No se esperaban más parametros", preanalisis, "llamada", "Semantico")
             ret = "ERROR"
         parametrosReales(parametros)
         # except IndexError:
@@ -958,11 +978,13 @@ def llamada(parametros=None,id = None):
             reportar("Error: Cantidad de parametros incorrecto. Se esperaban " +
                      str(len(parametros)) + " parametros", preanalisis, "llamada", "Semantico")
             ret = "ERROR"
-        except AttributeError: #Si parametros = None, es decir se invoco llamada sin parametros
-            reportar("Error: Cantidad de parametros incorrecto. No Se esperaban parametros", preanalisis, "llamada", "Semantico")
+        except AttributeError : #Si parametros = None, es decir se invoco llamada sin parametros
+
+            reportar("Error: Cantidad de parametros incorrecto. No se esperaban parametros", preanalisis, "llamada", "Semantico")
             ret = "ERROR"
-        except KeyError: #Si no requiere parametros y sin embargo tiene
-            reportar("Error: Cantidad de parametros incorrecto. No Se esperaban parametros", preanalisis, "llamada", "Semantico")
+        except KeyError as e: #Si no requiere parametros y sin embargo tiene
+            print e
+            reportar("Error: Cantidad de parametros incorrecto. No se esperaban parametros", preanalisis, "llamada", "Semantico")
             ret = "ERROR"
         parametrosReales(parametros)
         match("parentesis_c")
