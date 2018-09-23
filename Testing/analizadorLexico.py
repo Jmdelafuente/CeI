@@ -605,7 +605,11 @@ def siguientePreanalisis():
     global lexemaAnterior
 
     if(f is None):
-        f = open(archivo, "r")
+        try:
+            f = open(archivo, "r")
+        except IOError as e:
+            print "ARCHIVO NO ENCONTRADO: "+str(e)
+            os.system('kill %d' % os.getpid())
     while len(tokens) == 0:
         nroLinea += 1
         linea = f.readline()

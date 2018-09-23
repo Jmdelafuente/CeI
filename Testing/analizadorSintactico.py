@@ -434,7 +434,7 @@ def termino1(ret):
 
 def factor():
     ret = "VOID"
-    parametros = {}
+    parametros = None
     identificadorActual=""
     if verbose:
         print("-->factor")
@@ -449,7 +449,6 @@ def factor():
             #ret = "Error"
         try:
             #print "LLEGUEEE"
-            #print repr(id)
             if id["atributo"] in {"function", "procedure"}:
                 parametros = id["parametros"].copy()
             elif id["atributo"] == "retorno":
@@ -771,7 +770,7 @@ def declaracionPyf():
         nombreSubprograma = identificadoresActuales[0]
         # generamos la entrada en la Tabla de Simbolos para el subprograma
         generarEntradas("void")
-        tablaActual[nombreSubprograma].update({"atributo":"procedimiento"})
+        tablaActual[nombreSubprograma].update({"atributo":"procedure"})
         # Semantico: Cambio de ambito: de Program a Procedure -lectura de parametros-
         # generamos un contexto para guardar los parametros
         tablaActual = tablaActual.new_child()
@@ -806,7 +805,7 @@ def declaracionPyf():
         nombreSubprograma = identificadoresActuales[0]
         variableRetorno = identificadoresActuales
         generarEntradas("function")
-        tablaActual[nombreSubprograma].update({"atributo":"procedimiento"})
+        tablaActual[nombreSubprograma].update({"atributo":"function"})
         # Semantico: Cambio de contexto: de Program a Function
         tablaActual = tablaActual.new_child()
         # Sintactico
@@ -983,8 +982,8 @@ def llamada(parametros=None,id = None):
             reportar("Error: Cantidad de parametros incorrecto. Se esperaban " +
                      str(len(parametros)) + " parametros", preanalisis, "llamada", "Semantico")
             ret = "ERROR"
-        except AttributeError : #Si parametros = None, es decir se invoco llamada sin parametros
-
+        except AttributeError as e: #Si parametros = None, es decir se invoco llamada sin parametros
+            print e
             reportar("Error: Cantidad de parametros incorrecto. No se esperaban parametros", preanalisis, "llamada", "Semantico")
             ret = "ERROR"
         except KeyError as e: #Si no requiere parametros y sin embargo tiene
