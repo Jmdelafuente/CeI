@@ -448,7 +448,6 @@ def factor():
                      " no se encuentra definido. ", preanalisis, "termino1", "Semantico")
             #ret = "Error"
         try:
-            #print "LLEGUEEE"
             if id["atributo"] in {"function", "procedure"}:
                 parametros = id["parametros"].copy()
             elif id["atributo"] == "retorno":
@@ -1027,10 +1026,13 @@ def reportar(tipoError, simbolo, metodo, tipoReporte="Sintactico"):
     global error
     global preanalisisAnterior
     global nroLinea
-    if tipoReporte == "Sintactico":
+    if tipoReporte == "Sintactico" and analizadorLexico.lexemaAnterior is None:
         err = "[" + str(analizadorLexico.nroLinea) + "] " + tipoError + " en la expresion " + \
-            repr(analizadorLexico.lexema) + " despues de " + \
-            repr(analizadorLexico.lexemaAnterior) + "\n"
+            repr(analizadorLexico.lexema) + " \n"
+    elif tipoReporte == "Sintactico":
+            err = "[" + str(analizadorLexico.nroLinea) + "] " + tipoError + " en la expresion " + \
+                repr(analizadorLexico.lexema) + " despues de " + \
+                repr(analizadorLexico.lexemaAnterior) + "\n"
     elif tipoReporte == "Semantico":
         err = "[" + str(analizadorLexico.nroLinea) + "] " + tipoError + "\n"
     if(args.standalone):
