@@ -650,7 +650,7 @@ def expresionGeneral1(ret):
 
 def expresionRelacional(ret):
     if verbose:
-        print("-->expresionAritmetica2")
+        print("-->expresionRelacional")
     if(preanalisis == "operador_relacional"):
         operador = analizadorLexico.lexema
         operadorRelacional()
@@ -663,7 +663,7 @@ def expresionRelacional(ret):
     elif verbose:
         print('\033[93m' + "> Lambda") + '\033[0m'
     if verbose:
-        print("<--expresionAritmetica2")
+        print("<--expresionRelacional")
     return ret
 
 
@@ -885,7 +885,7 @@ def declaracionPyf():
 def parametrosFormales():
     ret = "VOID"
     if verbose:
-        print("-->parametrosRep")
+        print("-->parametrosFormales")
     if preanalisis == "parentesis_a":
         match("parentesis_a")
         ret = listaIdentificador()
@@ -900,7 +900,7 @@ def parametrosFormales():
     elif verbose:
         print('\033[93m' + "> Lambda") + '\033[0m'
     if verbose:
-        print("<--parametrosRep")
+        print("<--parametrosFormales")
     return ret
 
 # def declaracionVariablesRep():
