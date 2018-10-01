@@ -336,12 +336,14 @@ def asignacionollamada(id):
         parametros = None
         idLlamada = None
         try:
-            idLlamada = tablaActual[id]
-            parametros = tablaActual[id]["parametros"].copy()
             if (tablaActual[id]["atributo"] == "retorno"):
                 parametros = tablaActual.parent[id]["parametros"].copy()
                 idLlamada = tablaActual.parent[id]
-        except KeyError:
+            else:
+                idLlamada = tablaActual[id]
+                parametros = tablaActual[id]["parametros"].copy()
+        except KeyError as ex:
+            print ex
             reportar("El identificador " + repr(id) + " no esta definido. ",
             preanalisis, "generarVariables", "Semantico")
         except UnboundLocalError:
@@ -353,6 +355,28 @@ def asignacionollamada(id):
     #else:
     #    reportar("Error de sintaxis: se esperaba :=, (, o ;",
     #             preanalisis, "asignacionollamada")
+
+    else:
+        try:
+            parametros = None
+            idLlamada = None
+            if (tablaActual[id]["atributo"] == "retorno"):
+                parametros = tablaActual.parent[id]["parametros"].copy()
+                idLlamada = tablaActual.parent[id]
+            elif tablaActual[id]["atributo"] in {"procedure","function"}:
+                idLlamada = tablaActual[id]
+                parametros = tablaActual[id]["parametros"].copy()
+        except KeyError:
+            reportar("El identificador " + repr(id) + " no esta definido. ",
+            preanalisis, "generarVariables", "Semantico")
+        except UnboundLocalError:
+            reportar("El identificador " + repr(id) + " no es subprograma. ",
+            preanalisis, "generarVariables", "Semantico")
+        if parametros:
+            reportar("Error: Cantidad de parametros incorrecto. Se esperaba(n) " +
+                     str(len(parametros)) + " parametro(s)", preanalisis, "llamada", "Semantico")
+        if verbose:
+            print('\033[93m' + "> Lambda") + '\033[0m'
     if verbose:
         print("<--asignacionollamada")
     return ret
@@ -533,7 +557,8 @@ def programa():
         # programaRepPyf()
         declaracionPyfRep()
         match("begin")
-        programaRepSentencia()
+        #programaRepSentencia()
+        compuesta()
         #ret2 = sentenciaCompuesta()
         match("end")
         match("punto")
@@ -563,21 +588,21 @@ def declaracionVariableOpt():
     return ret
 
 
-def programaRepSentencia():
-    ret = "VOID"
-    if verbose:
-        print("-->programaRepSentencia")
-    caso1 = {"begin", "read", "write", "while", "if"}
-    if (preanalisis in caso1) or (preanalisis == "identificador"):
-        ret = compuesta()
-        programaRepSentencia()
-        # if not programaRepSentencia() == ret:
-        #ret = "Error"
-    elif verbose:
-        print('\033[93m' + "> Lambda") + '\033[0m'
-    if verbose:
-        print("<--programaRepSentencia")
-    return ret
+# def programaRepSentencia():
+#     ret = "VOID"
+#     if verbose:
+#         print("-->programaRepSentencia")
+#     caso1 = {"begin", "read", "write", "while", "if"}
+#     if (preanalisis in caso1) or (preanalisis == "identificador"):
+#         ret = compuesta()
+#         programaRepSentencia()
+#         # if not programaRepSentencia() == ret:
+#         #ret = "Error"
+#     elif verbose:
+#         print('\033[93m' + "> Lambda") + '\033[0m'
+#     if verbose:
+#         print("<--programaRepSentencia")
+#     return ret
 
 
 def expresionGeneral():
@@ -764,81 +789,91 @@ def declaracionPyf():
         # Sintactico
         match("procedure")
         identificador()
-        # Semantico: Generar entrada en la Tabla para el procedimiento
-        # guardamos temporalmente el nombre del subprograma
-        nombreSubprograma = identificadoresActuales[0]
-        # generamos la entrada en la Tabla de Simbolos para el subprograma
-        generarEntradas("void")
-        tablaActual[nombreSubprograma].update({"atributo":"procedure"})
-        # Semantico: Cambio de ambito: de Program a Procedure -lectura de parametros-
-        # generamos un contexto para guardar los parametros
-        tablaActual = tablaActual.new_child()
-        # Sintactico
-        ret = parametrosFormales()
-        # Semantico: Los parametros deben figurar como variables en el contexto del procedure que es el nuevo actual
-        # guardamos los parametros en la Tabla de Simbols del padre
-        tablaActual.parent[nombreSubprograma].update(
-            {"parametros": tablaActual.map.copy()})
-        # Sintactico
-        match("punto_coma")
-        ret1 = declaracionVariableOpt()
-        ret2 = declaracionPyfRep()
-        # ret3 = sentenciaCompuesta()
-        match("begin")
-        ret3 = programaRepSentencia()
-        match("end")
-        match("punto_coma")
-        if not(ret == "VOID" and ret1 == "VOID" and ret2 == "VOID" and not(ret3 == "ERROR")):
+        try:
+            # Semantico: Generar entrada en la Tabla para el procedimiento
+            # guardamos temporalmente el nombre del subprograma
+            nombreSubprograma = identificadoresActuales[0]
+            # generamos la entrada en la Tabla de Simbolos para el subprograma
+            generarEntradas("void")
+            tablaActual[nombreSubprograma].update({"atributo":"procedure"})
+            # Semantico: Cambio de ambito: de Program a Procedure -lectura de parametros-
+            # generamos un contexto para guardar los parametros
+            tablaActual = tablaActual.new_child()
+            # Sintactico
+            ret = parametrosFormales()
+            # Semantico: Los parametros deben figurar como variables en el contexto del procedure que es el nuevo actual
+            # guardamos los parametros en la Tabla de Simbols del padre
+            tablaActual.parent[nombreSubprograma].update(
+                {"parametros": tablaActual.map.copy()})
+            # Sintactico
+            match("punto_coma")
+            ret1 = declaracionVariableOpt()
+            ret2 = declaracionPyfRep()
+            # ret3 = sentenciaCompuesta()
+            match("begin")
+            #ret3 = programaRepSentencia()
+            ret3 = compuesta()
+            match("end")
+            match("punto_coma")
+            if not(ret == "VOID" and ret1 == "VOID" and ret2 == "VOID" and not(ret3 == "ERROR")):
+                reportar("Error: existen errores semanticos en la definicion del PROCEDURE " +
+                         str(nombreSubprograma), preanalisis, "declaracionPyf", "Semantico")
+                #ret = "Error"
+            # Semantico: Cambio de contexto: desapilo la tabla procedure
+            identificadoresActuales = []
+            tablaActual = tablaActual.parent
+        except IndexError:
             reportar("Error: existen errores semanticos en la definicion del PROCEDURE " +
                      str(nombreSubprograma), preanalisis, "declaracionPyf", "Semantico")
-            #ret = "Error"
-        # Semantico: Cambio de contexto: desapilo la tabla procedure
-        identificadoresActuales = []
-        tablaActual = tablaActual.parent
     elif preanalisis == "function":
         # Sintactico
         match("function")
         identificador()
-        # Semantico: Generar entrada en la Tabla para el procedimiento y almacenar el nombre de la funcion para su variable ret
-        # guardamos temporalmente el nombre del subprograma
-        nombreSubprograma = identificadoresActuales[0]
-        variableRetorno = identificadoresActuales
-        generarEntradas("function")
-        tablaActual[nombreSubprograma].update({"atributo":"function"})
-        # Semantico: Cambio de contexto: de Program a Function
-        tablaActual = tablaActual.new_child()
-        # Sintactico
-        ret1 = parametrosFormales()
-        # Semantico: Los parametros deben figurar como variables en el contexto del procedure que es el nuevo actual
-        # guardamos los parametros en la Tabla de Simbols del padre
-        tablaActual.parent[nombreSubprograma].update(
-            {"parametros": tablaActual.map.copy()})
-        match("dos_puntos")
-        # Semantico: Definimos la variable de retorno para ser insertada con su tipo de Variable
-        identificadoresActuales = variableRetorno
-        # Sintactico
-        ret = tipoVariables()
-        #Semantico: definimos la variable con el nombre del subprograma como "retorno"
-        tablaActual[nombreSubprograma]["atributo"]="retorno"
-        #Semantico: asignacion de tipo y atributo de la funcion en la tabla de simbolos
-        tipoFuncion = tablaActual[nombreSubprograma]["tipo"]
-        tablaActual.parent[nombreSubprograma].update({"atributo":"function"})
-        tablaActual.parent[nombreSubprograma].update({"tipo":tipoFuncion})
-        match("punto_coma")
-        ret1 = declaracionVariableOpt()
-        ret2 = declaracionPyfRep()
-        # ret3 = sentenciaCompuesta()
-        match("begin")
-        ret3 = programaRepSentencia()
-        match("end")
-        match("punto_coma")
-        if not(ret1 == "VOID" and ret2 == "VOID" and not(ret3 == "ERROR")):
-            reportar("Error: existen errores semanticos en la definicion del FUNCTION " +
+        try:
+            # Semantico: Generar entrada en la Tabla para el procedimiento y almacenar el nombre de la funcion para su variable ret
+            # guardamos temporalmente el nombre del subprograma
+            nombreSubprograma = identificadoresActuales[0]
+            variableRetorno = identificadoresActuales
+            generarEntradas("function")
+            tablaActual[nombreSubprograma].update({"atributo":"function"})
+            # Semantico: Cambio de contexto: de Program a Function
+            tablaActual = tablaActual.new_child()
+            # Sintactico
+            ret1 = parametrosFormales()
+            # Semantico: Los parametros deben figurar como variables en el contexto del procedure que es el nuevo actual
+            # guardamos los parametros en la Tabla de Simbols del padre
+            tablaActual.parent[nombreSubprograma].update(
+                {"parametros": tablaActual.map.copy()})
+            match("dos_puntos")
+            # Semantico: Definimos la variable de retorno para ser insertada con su tipo de Variable
+            identificadoresActuales = variableRetorno
+            # Sintactico
+            ret = tipoVariables()
+            #Semantico: definimos la variable con el nombre del subprograma como "retorno"
+            tablaActual[nombreSubprograma]["atributo"]="retorno"
+            #Semantico: asignacion de tipo y atributo de la funcion en la tabla de simbolos
+            tipoFuncion = tablaActual[nombreSubprograma]["tipo"]
+            tablaActual.parent[nombreSubprograma].update({"atributo":"function"})
+            tablaActual.parent[nombreSubprograma].update({"tipo":tipoFuncion})
+            match("punto_coma")
+            ret1 = declaracionVariableOpt()
+            ret2 = declaracionPyfRep()
+            # ret3 = sentenciaCompuesta()
+            match("begin")
+            #ret3 = programaRepSentencia()
+            ret3 = compuesta()
+            match("end")
+            match("punto_coma")
+            if not(ret1 == "VOID" and ret2 == "VOID" and not(ret3 == "ERROR")):
+                reportar("Error: existen errores semanticos en la definicion del FUNCTION " +
+                         str(nombreSubprograma), preanalisis, "declaracionPyf", "Semantico")
+                #ret = "Error"
+            # Semantico: Cambio de contexto: desapilo la tabla de function
+            identificadoresActuales = []
+            tablaActual = tablaActual.parent
+        except IndexError:
+            reportar("Error: existen errores semanticos en la definicion del PROCEDURE " +
                      str(nombreSubprograma), preanalisis, "declaracionPyf", "Semantico")
-            #ret = "Error"
-        # Semantico: Cambio de contexto: desapilo la tabla de function
-        identificadoresActuales = []
-        tablaActual = tablaActual.parent
     else:
         reportar("Error de sintaxis: se esperaba PROCEDURE o FUNCTION",
                  preanalisis, "declaracionPyf")
@@ -978,15 +1013,13 @@ def llamada(parametros=None,id = None):
                 ret = "ERROR"
         except IndexError:
             # Cantidad de parametros incorrecta
-            reportar("Error: Cantidad de parametros incorrecto. Se esperaban " +
-                     str(len(parametros)) + " parametros", preanalisis, "llamada", "Semantico")
+            reportar("Error: Cantidad de parametros incorrecto. Se esperaba(n) " +
+                     str(len(parametros)) + " parametro(s)", preanalisis, "llamada", "Semantico")
             ret = "ERROR"
-        except AttributeError as e: #Si parametros = None, es decir se invoco llamada sin parametros
-            print e
+        except AttributeError: #Si parametros = None, es decir se invoco llamada sin parametros
             reportar("Error: Cantidad de parametros incorrecto. No se esperaban parametros", preanalisis, "llamada", "Semantico")
             ret = "ERROR"
-        except KeyError as e: #Si no requiere parametros y sin embargo tiene
-            print e
+        except KeyError: #Si no requiere parametros y sin embargo tiene
             reportar("Error: Cantidad de parametros incorrecto. No se esperaban parametros", preanalisis, "llamada", "Semantico")
             ret = "ERROR"
         parametrosReales(parametros)
