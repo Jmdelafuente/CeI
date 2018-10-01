@@ -1073,7 +1073,7 @@ def reportar(tipoError, simbolo, metodo, tipoReporte="Sintactico"):
         exit(0)
     else:
         if(err):
-            filtered = fnmatch.filter(error, "*" + tipoError + "\n")
+            filtered = fnmatch.filter(error, tipoError + "\n")
             filtered += fnmatch.filter(error, "*[" + str(analizadorLexico.nroLinea) + "*")
             if not filtered:
                 error.append(err)
