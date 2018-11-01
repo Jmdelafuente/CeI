@@ -1,0 +1,25 @@
+PROGRAM prueba
+var
+{Comentario seguramente util y perspicaz}
+a : integer;
+
+procedure funcion ();
+var
+a : integer;
+begin
+	a := 10<9;
+end;
+
+
+BEGIN
+b:=3-6*(5*(-10003 * 8 * 8)/2)+5*3;
+C:= 3-6*(5*((-10003 < 8) * 8)/2)+5*3 or false;
+if not a > b  THEN
+begin
+	c := not(true or false)
+end
+else
+noidentado();
+
+
+END.

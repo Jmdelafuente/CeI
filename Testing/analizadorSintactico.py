@@ -224,13 +224,13 @@ def tipoVariables():
     return ret
 
 
-def sentenciaCompuesta():
+def sentenciaCompuesta(etiAnterior):
     ret = "VOID"
     if verbose:
         print("-->sentenciaCompuesta")
     if(preanalisis == "begin"):
         match("begin")
-        ret = compuesta()
+        ret = compuesta(etiAnterior)
         match("end")
         match("punto_coma")
     else:
@@ -241,17 +241,17 @@ def sentenciaCompuesta():
     return ret
 
 
-def compuesta():
+def compuesta(etiAnterior):
     ret = "VOID"
     if verbose:
         print("-->compuesta")
     case1 = {'write', 'while', 'read', 'if'}
     if ((preanalisis == "identificador") or (preanalisis in case1)):
-        ret = sentencia()
-        sentenciaOptativa()
+        ret = sentencia(etiAnterior)
+        sentenciaOptativa(etiAnterior)
     elif (preanalisis == "begin"):
-        ret = sentenciaCompuesta()
-        compuesta()
+        ret = sentenciaCompuesta(etiAnterior)
+        compuesta(etiAnterior)
     elif verbose:
         print('\033[93m' + "> Lambda") + '\033[0m'
     if verbose:
@@ -259,14 +259,14 @@ def compuesta():
     return ret
 
 
-def sentenciaOptativa():
+def sentenciaOptativa(etiAnterior):
     ret = "VOID"
     if verbose:
         print("-->sentenciaOptativa")
     if(preanalisis == "punto_coma"):
         match("punto_coma")
         # sentenciaOptativa2()
-        ret = compuesta()
+        ret = compuesta(etiAnterior)
     elif verbose:
         print('\033[93m' + "> Lambda") + '\033[0m'
     if verbose:
@@ -288,14 +288,14 @@ def no():
     return ret
 
 
-def sentencia():
+def sentencia(etiAnterior):
     ret = "VOID"
     if verbose:
         print("-->sentencia")
     if(preanalisis == "if"):
         ret = ifthen()
     elif(preanalisis == 'while'):
-        ret = mientras()
+        ret = mientras(etiAnterior)
     elif(preanalisis == 'write'):
         match("write")
         match("parentesis_a")
@@ -854,19 +854,34 @@ def alternativa(etiAnterior):
     return ret
 
 
-def mientras():
+def mientras(etiAnterior):
+    global codigo
+    global etiqueta
     ret = "VOID"
     if verbose:
         print("-->mientras")
     if (preanalisis == "while"):
         match("while")
+        #MEPA: Se define la vuelta del WHILE
+        etiqueta +=1
+        codigo += str(etiqueta) + ' NADA \n'
         ret = expresionGeneral()
+
         if  ret != "BOOLEAN":
             reportar("Error de Tipo: la condicion del WHILE debe ser de tipo BOOLEAN.",
                      preanalisis, "mientras", "Semantico")
             #ret = "Error"
         match("do")
-        ret = sentenciaCompuesta()
+        #MEPA: Si la condicion es falsa
+        etiqueta += 1
+        codigo += 'DSVF ' + str(etiqueta) + '\n'
+        ret = sentenciaCompuesta(etiqueta-1)
+        #MEPA: Definicion del salto del mientras
+        codigo += 'DSVS ' + str(etiAnterior) + '\n'
+
+        #MEPA: Codigo a realizar cuando finaliza la repetitiva
+        etiqueta +=1
+        codigo += str(etiqueta) + ' NADA \n'
         #sentenciaCompuesta()
     else:
         reportar("Error de sintaxis: se esperaba WHILE",
