@@ -53,6 +53,8 @@ global nivel
 nivel = 0
 global etiqueta
 etiqueta = 0
+global definicionVariables
+definicionVariables=0
 # Definicion de casos posibles
 
 
@@ -111,12 +113,16 @@ def identificador():
 
 
 def declaracionVariables():
+    global codigo,definicionVariables
     ret = "VOID"
     if verbose:
         print("-->declaracionVariables")
     if(preanalisis == 'var'):
         match('var')
         ret = listaVariables()
+        if definicionVariables :
+            codigo += "RMEM "+str(definicionVariables)+"\n"
+        definicionVariables=0
     else:
         reportar("Error de Sintaxis: se esperaba VAR",
                  preanalisis, "declaracionVariables")
@@ -203,16 +209,21 @@ def listaIdentificadorRep():
 
 
 def tipoVariables():
+    global codigo,definicionVariables
     ret = "VOID"
     if verbose:
         print("-->tipoVariable")
     if(preanalisis == "integer"):
+        # # MEPA: reservamos el espacio para la variable
+        # codigo += "RMEM "+str(len(identificadoresActuales))+"\n"
         # Semantico: se añade el tipo a los identificadores almacenados
+        definicionVariables += len(identificadoresActuales)
         generarEntradas(preanalisis)
         # Sintactico
         match("integer")
     elif(preanalisis == "boolean"):
         # Semantico: se añade el tipo a la lista de variables definida
+        definicionVariables += len(identificadoresActuales)
         generarEntradas(preanalisis)
         # Sintactico
         match("boolean")
@@ -224,13 +235,13 @@ def tipoVariables():
     return ret
 
 
-def sentenciaCompuesta(etiAnterior):
+def sentenciaCompuesta():
     ret = "VOID"
     if verbose:
         print("-->sentenciaCompuesta")
     if(preanalisis == "begin"):
         match("begin")
-        ret = compuesta(etiAnterior)
+        ret = compuesta()
         match("end")
         match("punto_coma")
     else:
@@ -241,17 +252,17 @@ def sentenciaCompuesta(etiAnterior):
     return ret
 
 
-def compuesta(etiAnterior):
+def compuesta():
     ret = "VOID"
     if verbose:
         print("-->compuesta")
     case1 = {'write', 'while', 'read', 'if'}
     if ((preanalisis == "identificador") or (preanalisis in case1)):
-        ret = sentencia(etiAnterior)
-        sentenciaOptativa(etiAnterior)
+        ret = sentencia()
+        sentenciaOptativa()
     elif (preanalisis == "begin"):
-        ret = sentenciaCompuesta(etiAnterior)
-        compuesta(etiAnterior)
+        ret = sentenciaCompuesta()
+        compuesta()
     elif verbose:
         print('\033[93m' + "> Lambda") + '\033[0m'
     if verbose:
@@ -259,14 +270,14 @@ def compuesta(etiAnterior):
     return ret
 
 
-def sentenciaOptativa(etiAnterior):
+def sentenciaOptativa():
     ret = "VOID"
     if verbose:
         print("-->sentenciaOptativa")
     if(preanalisis == "punto_coma"):
         match("punto_coma")
         # sentenciaOptativa2()
-        ret = compuesta(etiAnterior)
+        ret = compuesta()
     elif verbose:
         print('\033[93m' + "> Lambda") + '\033[0m'
     if verbose:
@@ -288,25 +299,37 @@ def no():
     return ret
 
 
-def sentencia(etiAnterior):
+def sentencia():
+    global codigo
     ret = "VOID"
+
     if verbose:
         print("-->sentencia")
     if(preanalisis == "if"):
         ret = ifthen()
     elif(preanalisis == 'while'):
-        ret = mientras(etiAnterior)
+        ret = mientras()
     elif(preanalisis == 'write'):
         match("write")
         match("parentesis_a")
         expresionGeneral()
         match("parentesis_c")
+        # MEPA: Salida estandar
+        codigo += "IMPR \n"
     elif(preanalisis == "read"):
         match("read")
         match("parentesis_a")
         identificador()
         try:
-            tablaActual[identificadoresActuales.pop()]
+            id = identificadoresActuales.pop()
+            tablaActual[id]
+
+            # MEPA: Leer valor por entrada estandar
+            codigo += "LEER \n"
+            # MEPA: Asignar valor leido a la variable correspondiente
+            nivel = tablaActual[id]["nivel"]
+            direccion = tablaActual[id]["direccion"]
+            codigo += "APVL "+ str(direccion) +", "+str(nivel)+"\n"
         except KeyError:
             reportar("Se esperaba un identificador valido. ",
                      preanalisis, "sentencia", "Semantico")
@@ -539,8 +562,8 @@ def factor():
         match("read")
         match("parentesis_a")
         identificador()
-        id = identificadoresActuales.pop()
         try:
+            id = identificadoresActuales.pop()
             ret = tablaActual[id]["tipo"].upper()
             # MEPA: Leer valor por entrada estandar
             codigo += "LEER \n"
@@ -594,7 +617,7 @@ def programa():
     global tablaSimbolos
     global tablaActual
     global identificadoresActuales
-    global codigo
+    global codigo,etiqueta
     if verbose:
         print("-->programa")
     if preanalisis == "program":
@@ -603,7 +626,7 @@ def programa():
         tablaActual = tablaSimbolos
         # Sintactico
         match("program")
-        # MEPA
+        # MEPA inicio de programa
         codigo += "INPP \n"
         # Sintactico
         identificador()
@@ -613,8 +636,14 @@ def programa():
         match("punto_coma")
         declaracionVariableOpt()
         # programaRepPyf()
+        # MEPA: etiqueta main
+        etiqueta += 1
+        etMain = etiqueta
+        codigo += "DSVS L"+str(etMain)+"\n"
         declaracionPyfRep()
         match("begin")
+        # MEPA: salto incondicional al begin main
+        codigo+="L"+str(etMain)+" NADA \n"
         #programaRepSentencia()
         compuesta()
         #ret2 = sentenciaCompuesta()
@@ -789,7 +818,7 @@ def ifthen():
         match("then")
         #Mepa: Desviar si es Falso
         etiqueta += 1
-        codigo += 'DSVF '+ str(etiqueta) + '\n'
+        codigo += 'DSVF L'+ str(etiqueta) + '\n'
         ret = ifthen1(etiqueta)
     else:
         reportar("Error de sintaxis: se esperaba IF expresion THEN",
@@ -835,17 +864,17 @@ def alternativa(etiAnterior):
     if (preanalisis == "punto_coma"):
         match("punto_coma")
         #Mepa: No tiene ELSE
-        codigo += str(etiqueta)+' NADA \n'
+        codigo +='L'+ str(etiqueta)+' NADA \n'
     elif (preanalisis == "else"):
         match("else")
         #Mepa: Desvia siempre
         etiqueta += 1
-        codigo += 'DSVS ' + str(etiqueta) + '\n'
+        codigo += 'DSVS L' + str(etiqueta) + '\n'
         #Mepa: Tiene ELSE
-        codigo += str(etiAnterior)+' NADA \n'
+        codigo += 'L'+ str(etiAnterior)+' NADA \n'
         ret = compuesta()
         #Mepa: No tiene ELSE
-        codigo += str(etiqueta)+' NADA \n'
+        codigo += 'L' + str(etiqueta)+' NADA \n'
     else:
         reportar("Error de sintaxis: se esperaba ; o ELSE",
                  preanalisis, "alternativa")
@@ -854,7 +883,7 @@ def alternativa(etiAnterior):
     return ret
 
 
-def mientras(etiAnterior):
+def mientras():
     global codigo
     global etiqueta
     ret = "VOID"
@@ -864,7 +893,8 @@ def mientras(etiAnterior):
         match("while")
         #MEPA: Se define la vuelta del WHILE
         etiqueta +=1
-        codigo += str(etiqueta) + ' NADA \n'
+        etiRepetitiva = etiqueta
+        codigo += 'L' + str(etiqueta) + ' NADA \n'
         ret = expresionGeneral()
 
         if  ret != "BOOLEAN":
@@ -874,14 +904,14 @@ def mientras(etiAnterior):
         match("do")
         #MEPA: Si la condicion es falsa
         etiqueta += 1
-        codigo += 'DSVF ' + str(etiqueta) + '\n'
-        ret = sentenciaCompuesta(etiqueta-1)
+        etiFalso = etiqueta
+        codigo += 'DSVF L' + str(etiqueta) + '\n'
+        ret = sentenciaCompuesta()
         #MEPA: Definicion del salto del mientras
-        codigo += 'DSVS ' + str(etiAnterior) + '\n'
+        codigo += 'DSVS L' + str(etiRepetitiva) + '\n'
 
         #MEPA: Codigo a realizar cuando finaliza la repetitiva
-        etiqueta +=1
-        codigo += str(etiqueta) + ' NADA \n'
+        codigo += 'L'+str(etiFalso) + ' NADA \n'
         #sentenciaCompuesta()
     else:
         reportar("Error de sintaxis: se esperaba WHILE",
@@ -917,16 +947,17 @@ def declaracionPyf():
             tablaActual = tablaActual.new_child()
             # Sintactico
             ret = parametrosFormales()
-            # MEPA: Modificacion de desplazamiento correspondiente para los parametrosReales
-            iesimoParametro=1
-            for parametro in tablaActual:
-                parametro["direccion"]=-(int(parametro["direccion"]) + 3 - iesimoParametro)
-                iesimoParametro += 1
-
             # Semantico: Los parametros deben figurar como variables en el contexto del procedure que es el nuevo actual
             # guardamos los parametros en la Tabla de Simbols del padre
             tablaActual.parent[nombreSubprograma].update(
                 {"parametros": tablaActual.map.copy()})
+            # MEPA: Modificacion de desplazamiento correspondiente para los parametrosReales
+            iesimoParametro=1
+            parametros = tablaActual.parent[nombreSubprograma]["parametros"]
+            for parametro in parametros:
+                tablaActual[parametro]["direccion"]=-(int(tablaActual[parametro]["direccion"]) + 3 - iesimoParametro)
+                iesimoParametro += 1
+
             #MEPA: Se modifica el contador de variables
             dirVariable = 1
             # MEPA: Asignacion de etiqueta
@@ -963,7 +994,7 @@ def declaracionPyf():
                      str(nombreSubprograma), preanalisis, "declaracionPyf", "Semantico")
     elif preanalisis == "function":
         # Sintactico
-        codigo += "RMEM 1 \n"
+        # codigo += "RMEM 1 \n"
         match("function")
         identificador()
         try:
@@ -1044,6 +1075,7 @@ def declaracionPyf():
 
 
 def parametrosFormales():
+    global definicionVariables
     ret = "VOID"
     if verbose:
         print("-->parametrosFormales")
@@ -1058,6 +1090,7 @@ def parametrosFormales():
         # if not(parametrosFormalesRep() == "VOID"):
         #ret = "Error"
         match("parentesis_c")
+        definicionVariables = 0
     elif verbose:
         print('\033[93m' + "> Lambda") + '\033[0m'
     if verbose:
@@ -1155,15 +1188,20 @@ def parametrosReales(parametros):
 
 
 def llamada(parametros=None,id = None):
+    global codigo
     #Semantico: tipo del identificador
     ret = "VOID" if id == None else id["tipo"].upper()
     if verbose:
         print("-->llamada")
     #print repr(parametros) + " en linea " + str(analizadorLexico.nroLinea) + " con preanalisis " + repr(preanalisis)
     if preanalisis == "parentesis_a":
-        match("parentesis_a")
-        ret2 = expresionGeneral()
         try:
+            # MEPA: si es una funcion reserva la posicion para variableRetorno
+            if id["atributo"]=="function": #Si es una funcion
+                codigo += "RMEM 1 \n" #reservamos la memoria para el retorno
+            match("parentesis_a")
+            ret2 = expresionGeneral()
+            # Vieja posicion del try
             parametroActual = parametros.popitem(False)
             identificadorActual = parametroActual[0]
             tipoActual = parametroActual[1]["tipo"].upper()
@@ -1185,6 +1223,9 @@ def llamada(parametros=None,id = None):
             ret = "ERROR"
         parametrosReales(parametros)
         match("parentesis_c")
+        # MEPA: codigo de la llamada a la funcion
+        etiqueta = id["etiqueta"]
+        codigo += "LLPR "+etiqueta+ "\n"
     elif verbose:
         print('\033[93m' + "> Lambda") + '\033[0m'
     else:
@@ -1341,13 +1382,12 @@ def procesar():
         error.sort()
         for e in error:
             print e
-        #Salida temporal: Codigo MEPA
-        print codigo
         # Terminar la ejecucion
         os.system('kill %d' % os.getpid())
     else:
         print "Analisis finalizado. No hay errores detectados"
-
+    #Salida temporal: Codigo MEPA
+    print codigo
 # DEFINICIONES SEMANTICO
 
 
@@ -1355,9 +1395,7 @@ def generarEntradas(tipo):
     #Variables globales de la tabla de simbolos actual
     global identificadoresActuales,tablaActual
     #Variables gloables de MEPA
-    global codigo,dirVariable,nivel
-    # MEPA: reservamos el espacio para la variable
-    codigo += "RMEM "+str(len(identificadoresActuales))+"\n"
+    global dirVariable,nivel
     # Añadir cada identificador a la tabla con el tipo asociado
     for identificador in identificadoresActuales:
         # si el identificador existe: añadimos el error
