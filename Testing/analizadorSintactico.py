@@ -44,19 +44,43 @@ global identificadoresActuales
 identificadoresActuales = list()
 
 
+## Generación de Código Intermedio
+global codigo
+codigo = ""
+global dirVariable
+dirVariable = 0
+global nivel
+nivel = 0
+global etiqueta
+etiqueta = 0
 # Definicion de casos posibles
 
 
 def digitos():
     ret = "VOID"
+    global codigo
     if verbose:
         print("-->digitos")
     if(preanalisis == "numero"):
+        # Almaceno el valor del numero encontrado
+        numero = analizadorLexico.lexema
         match("numero")
+        codigo += "APCT "+str(numero)+"\n"
         ret = "INTEGER"
     elif (preanalisis == "operador_aritmetico"):
+        # Almaceno el valor del operador encontrado
+        operador = analizadorLexico.lexema
         match("operador_aritmetico")
+        # Almaceno el valor del numero encontrado
+        numero = analizadorLexico.lexema
         match("numero")
+        # MEPA: Calculo de la operacion unaria
+        if(operador == "-"): # Si es un menor unario existe codigo relacionado
+            operador = "UMEN \n"
+        else: # Si es un + unario, no es necesario aplicar operacion
+            operador = ""
+        codigo += "APCT "+str(numero)+"\n"
+        codigo += operador
         ret = "INTEGER"
     else:
         reportar("Error de Sintaxis: se esperaba un numero, - o + ",
@@ -312,15 +336,19 @@ def sentencia():
 
 
 def asignacionollamada(id):
+    global codigo
+    #SEMANTICO: Verificacion de existencia
     try:
         ret = tablaActual[id]["tipo"].upper()
     except KeyError:
         reportar("El identificador " + repr(id) + " no esta definido. ",
                  preanalisis, "generarVariables", "Semantico")
         ret = "VOID"
+    #Modo Verboso
     if verbose:
         print("-->asignacionollamada")
     if preanalisis == "asignacion":
+        #SEMANTICO: Verificacion que sea una variable o el retorno de una funcion
         try:
             if tablaActual[id]["atributo"] not in {"variable","retorno"}:
                 reportar("La asignación no es correcta. El identificador " + repr(id) + " no es asignable. Debe ser una variable ", id, "sentencia", "Semantico")
@@ -331,7 +359,10 @@ def asignacionollamada(id):
         ret2 = expresionGeneral()
         if (ret != ret2) and ret != "VOID":
             reportar("La asignación no es correcta. El identificador " + repr(id) + " no es del tipo correcto.", id, "sentencia", "Semantico")
-
+        #MEPA: asignamos el valor final a la variable
+        variableAsignacion = tablaActual[id]["direccion"]
+        variableNivel = tablaActual[id]["nivel"]
+        codigo += "ALVL "+str(variableNivel)+","+str(variableAsignacion)+"\n"
     elif preanalisis == "parentesis_a":
         parametros = None
         idLlamada = None
@@ -400,6 +431,7 @@ def expresionAritmetica():
 
 
 def expresionAritmetica1(ret):
+    global codigo
     #print repr(analizadorLexico.nroLinea)+"ret"+"--------------------------------------------->>>"+repr(ret)
     if verbose:
         print("-->expresionAritmetica1")
@@ -412,6 +444,11 @@ def expresionAritmetica1(ret):
             reportar("El operador "+operador+" se encuentra definido para tipos INTEGER. ",
                      preanalisis, "expresionAritmetica1", "Semantico")
             #ret = "Error"
+        # MEPA: Se genera el codigo para la operacion
+        if(operador == "+"):
+            codigo += "SUMA \n"
+        else:
+            codigo += "SUST \n"
         ret = expresionAritmetica1(ret2)
     elif verbose:
         print('\033[93m' + "> Lambda") + '\033[0m'
@@ -438,6 +475,7 @@ def termino():
 
 
 def termino1(ret):
+    global codigo
     if verbose:
         print("-->termino1")
     if preanalisis == "operador_termino":
@@ -447,7 +485,12 @@ def termino1(ret):
             # No son de tipo compatible
             reportar("Tipo Incompatible: el operador "+ str(operador) +" se encuentra definido para tipos INTEGER. ",
                      preanalisis, "termino1", "Semantico")
-            #ret = "Error"
+            #ret = "Error
+        # MEPA: codigo para la * y /
+        if(operador == "*"):
+            codigo += "MULT \n"
+        else:
+            codigo += "DIVI \n"
         ret = termino1(ret)
     elif verbose:
         print('\033[93m' + "> Lambda") + '\033[0m'
@@ -460,6 +503,7 @@ def factor():
     ret = "VOID"
     parametros = None
     identificadorActual=""
+    global codigo
     if verbose:
         print("-->factor")
     if (preanalisis == "identificador"):
@@ -489,6 +533,8 @@ def factor():
         match("parentesis_a")
         expresionGeneral()
         match("parentesis_c")
+        # MEPA: Salida estandar
+        codigo += "IMPR \n"
     elif (preanalisis == "read"):
         match("read")
         match("parentesis_a")
@@ -496,6 +542,12 @@ def factor():
         id = identificadoresActuales.pop()
         try:
             ret = tablaActual[id]["tipo"].upper()
+            # MEPA: Leer valor por entrada estandar
+            codigo += "LEER \n"
+            # MEPA: Asignar valor leido a la variable correspondiente
+            nivel = tablaActual[id]["nivel"]
+            direccion = tablaActual[id]["direccion"]
+            codigo += "APVL "+ str(direccion) +", "+str(nivel)+"\n"
         except KeyError:
             reportar("Error: el identificador " + str(id) +
                      "no existe. ", preanalisis, "termino1", "Semantico")
@@ -505,9 +557,11 @@ def factor():
         ret = digitos()
     elif preanalisis == "true":
         match("true")
+        codigo += "APCT 1"
         ret = "BOOLEAN"
     elif preanalisis == "false":
         match("false")
+        codigo += "APCT 0"
         ret = "BOOLEAN"
     elif preanalisis == "parentesis_a":
         match("parentesis_a")
@@ -540,6 +594,7 @@ def programa():
     global tablaSimbolos
     global tablaActual
     global identificadoresActuales
+    global codigo
     if verbose:
         print("-->programa")
     if preanalisis == "program":
@@ -548,6 +603,9 @@ def programa():
         tablaActual = tablaSimbolos
         # Sintactico
         match("program")
+        # MEPA
+        codigo += "INPP \n"
+        # Sintactico
         identificador()
         # Semantico: Generamos la entrada para el nombre de Program
         generarEntradas("program")
@@ -573,6 +631,8 @@ def programa():
         print("<--programa")
         print repr(tablaSimbolos)
         return ret
+    #MEPA: Finalizacion del programa
+    codigo+= "PARA \n"
 
 
 def declaracionVariableOpt():
@@ -606,6 +666,7 @@ def declaracionVariableOpt():
 
 
 def expresionGeneral():
+    global codigo
     ret2 = "VOID"
     if verbose:
         print("-->expresionGeneral")
@@ -618,12 +679,13 @@ def expresionGeneral():
         ret2 = expresionRelacional(ret2)
         ret2 = compararAnd(ret2)
         ret2 = expresionGeneral1(ret2)
-        if ret == "BOOLEAN" and ret2!="BOOLEAN":
-            reportar("Tipo Incompatible: el operador NOT se encuentra definido para tipos BOOLEAN. ",
-                     preanalisis, "expresionGeneral1", "Semantico")
+        if ret == "BOOLEAN":
+            # MEPA: Generación del NOT
+            codigo += "NEGA \n"
+            if ret2!="BOOLEAN":
+                reportar("Tipo Incompatible: el operador NOT se encuentra definido para tipos BOOLEAN. ", preanalisis, "expresionGeneral1", "Semantico")
     else:
-        reportar("Error de sintaxis: se esperaba WRITE,READ,NOT,TRUE,FALSE,(,-,Digito o Identificador valido",
-                 preanalisis, "expresionGeneral")
+        reportar("Error de sintaxis: se esperaba WRITE,READ,NOT,TRUE,FALSE,(,-,Digito o Identificador valido", preanalisis, "expresionGeneral")
     if verbose:
         print("<--expresionGeneral")
     #print repr(analizadorLexico.nroLinea)+repr(ret)
@@ -631,6 +693,7 @@ def expresionGeneral():
 
 
 def expresionGeneral1(ret):
+    global codigo
     if verbose:
         print("-->expresionGeneral1")
     if preanalisis == "or":
@@ -641,6 +704,8 @@ def expresionGeneral1(ret):
             #ret = "Error"
         else:
             ret = "BOOLEAN"
+        # MEPA: generacion de OR
+        codigo += "DISJ \n"
     elif verbose:
         print('\033[93m' + "> Lambda") + '\033[0m'
     if verbose:
@@ -649,6 +714,7 @@ def expresionGeneral1(ret):
 
 
 def expresionRelacional(ret):
+    global codigo
     if verbose:
         print("-->expresionRelacional")
     if(preanalisis == "operador_relacional"):
@@ -660,6 +726,19 @@ def expresionRelacional(ret):
             #ret = "Error"
         else:
             ret = "BOOLEAN"
+        # MEPA: Generacion de codigo de relacionales
+        if(operador == "<"):
+            codigo += "CMME \n"
+        elif(operador == ">"):
+            codigo += "CMMA \n"
+        elif(operador == "="):
+            codigo += "CMIG \n"
+        elif(operador == "<>"):
+            codigo += "CMDG \n"
+        elif(operador == "<="):
+            codigo += "CMNI \n"
+        elif(operador == ">="):
+            codigo += "CMYI \n"
     elif verbose:
         print('\033[93m' + "> Lambda") + '\033[0m'
     if verbose:
@@ -668,11 +747,12 @@ def expresionRelacional(ret):
 
 
 def compararAnd(ret):
+    global codigo
     if verbose:
         print("-->compararAnd")
     if preanalisis == "and":
         match("and")
-        ret3 = no()
+        ret3 = no() #MEPA: ver if proximo a la llamada recursiva
         ret2 = expresionAritmetica()
         ret2 = expresionRelacional(ret2)
         if ret != "BOOLEAN" or ret2 != "BOOLEAN":
@@ -680,10 +760,14 @@ def compararAnd(ret):
             preanalisis, "compararAnd", "Semantico")
         # if not(expresionRelacional(ret2) == ret):
         #ret = "Error"
+        # MEPA: evaluación del NOT si corresponde
+        if(ret3 == "BOOLEAN"): #Si ret3 no es void, se proceso un NOT
+            codigo += "NEGA \n"
+        # MEPA: generacion de la conjuncion
+        codigo += "CONJ \n"
         compararAnd(ret)
         if ret3 == "BOOLEAN" and ret != "BOOLEAN":
-            reportar("Tipo Incompatible: el operador NOT se encuentra definido para tipos BOOLEAN. ",
-                     preanalisis, "compararAnd", "Semantico")
+                reportar("Tipo Incompatible: el operador NOT se encuentra definido para tipos BOOLEAN. ",preanalisis, "compararAnd", "Semantico")
     elif verbose:
         print('\033[93m' + "> Lambda") + '\033[0m'
     if verbose:
@@ -692,6 +776,7 @@ def compararAnd(ret):
 
 
 def ifthen():
+    global etiqueta,codigo
     ret = "VOID"
     if verbose:
         print("-->ifthen")
@@ -702,7 +787,10 @@ def ifthen():
                      preanalisis, "ifthen", "Semantico")
             #ret = "Error"
         match("then")
-        ret = ifthen1()
+        #Mepa: Desviar si es Falso
+        etiqueta += 1
+        codigo += 'DSVF '+ str(etiqueta) + '\n'
+        ret = ifthen1(etiqueta)
     else:
         reportar("Error de sintaxis: se esperaba IF expresion THEN",
                  preanalisis, "ifthen")
@@ -711,7 +799,7 @@ def ifthen():
     return ret
 
 
-def ifthen1():
+def ifthen1(etiAnterior):
     ret = "VOID"
     if verbose:
         print("-->ifthen1")
@@ -720,14 +808,14 @@ def ifthen1():
         match("begin")
         ret = compuesta()
         match("end")
-        alternativa()
+        alternativa(etiAnterior)
         #if not alternativa() == ret:
         #    reportar("Error: existen errores semanticos en las expresiones",
         #             preanalisis, "ifthen1", "Semantico")
             #ret = "Error"
     elif ((preanalisis in caso2) or (preanalisis == "identificador")):
         ret = sentencia()
-        alternativa()
+        alternativa(etiAnterior)
         #if not alternativa() == ret:
         #    reportar("Error: existen errores semanticos en las expresiones",
         #             preanalisis, "ifthen1", "Semantico")
@@ -739,15 +827,25 @@ def ifthen1():
         print("<--ifthen1")
     return ret
 
-def alternativa():
+def alternativa(etiAnterior):
+    global etiqueta,codigo
     ret = "VOID"
     if verbose:
         print("-->alternativa")
     if (preanalisis == "punto_coma"):
         match("punto_coma")
+        #Mepa: No tiene ELSE
+        codigo += str(etiqueta)+' NADA \n'
     elif (preanalisis == "else"):
         match("else")
+        #Mepa: Desvia siempre
+        etiqueta += 1
+        codigo += 'DSVS ' + str(etiqueta) + '\n'
+        #Mepa: Tiene ELSE
+        codigo += str(etiAnterior)+' NADA \n'
         ret = compuesta()
+        #Mepa: No tiene ELSE
+        codigo += str(etiqueta)+' NADA \n'
     else:
         reportar("Error de sintaxis: se esperaba ; o ELSE",
                  preanalisis, "alternativa")
@@ -781,6 +879,9 @@ def mientras():
 def declaracionPyf():
     global tablaActual
     global identificadoresActuales
+    # MEPA: variables para la generación de código intermedio
+    global codigo,nivel,dirVariable,etiqueta
+
     ret = "VOID"
     nombreSubprograma = ""
     if verbose:
@@ -795,16 +896,31 @@ def declaracionPyf():
             nombreSubprograma = identificadoresActuales[0]
             # generamos la entrada en la Tabla de Simbolos para el subprograma
             generarEntradas("void")
-            tablaActual[nombreSubprograma].update({"atributo":"procedure"})
+            tablaActual[nombreSubprograma].update({"atributo":"procedure","nivel":nivel})
             # Semantico: Cambio de ambito: de Program a Procedure -lectura de parametros-
             # generamos un contexto para guardar los parametros
             tablaActual = tablaActual.new_child()
             # Sintactico
             ret = parametrosFormales()
+            # MEPA: Modificacion de desplazamiento correspondiente para los parametrosReales
+            iesimoParametro=1
+            for parametro in tablaActual:
+                parametro["direccion"]=-(int(parametro["direccion"]) + 3 - iesimoParametro)
+                iesimoParametro += 1
+
             # Semantico: Los parametros deben figurar como variables en el contexto del procedure que es el nuevo actual
             # guardamos los parametros en la Tabla de Simbols del padre
             tablaActual.parent[nombreSubprograma].update(
                 {"parametros": tablaActual.map.copy()})
+            #MEPA: Se modifica el contador de variables
+            dirVariable = 1
+            # MEPA: Asignacion de etiqueta
+            etiqueta += etiqueta + 1
+            tablaActual.parent[nombreSubprograma].update(
+                {"etiqueta": 'L'+str(etiqueta)})
+            #MEPA: Entra al procedimiento de nivel 'K'
+            nivel += 1
+            codigo += tablaActual.parent[nombreSubprograma]["etiqueta"] + " ENPR "+str(nivel)+"\n"
             # Sintactico
             match("punto_coma")
             ret1 = declaracionVariableOpt()
@@ -819,6 +935,11 @@ def declaracionPyf():
                 reportar("Error: existen errores semanticos en la definicion del PROCEDURE " +
                          str(nombreSubprograma), preanalisis, "declaracionPyf", "Semantico")
                 #ret = "Error"
+            # MEPA: Liberar memoria de variables locales
+            codigo += "LMEM "+ str(len(tablaActual)-len(tablaActual.parent[nombreSubprograma]["parametros"]))+ "\n"
+            #MEPA: Se retorna al nivel superior
+            nivel-=1
+            codigo += "RTPR "+ str(nivel)+" "+str(len(tablaActual.parent[nombreSubprograma]["parametros"]))+ "\n"
             # Semantico: Cambio de contexto: desapilo la tabla procedure
             identificadoresActuales = []
             tablaActual = tablaActual.parent
@@ -827,6 +948,7 @@ def declaracionPyf():
                      str(nombreSubprograma), preanalisis, "declaracionPyf", "Semantico")
     elif preanalisis == "function":
         # Sintactico
+        codigo += "RMEM 1 \n"
         match("function")
         identificador()
         try:
@@ -835,11 +957,16 @@ def declaracionPyf():
             nombreSubprograma = identificadoresActuales[0]
             variableRetorno = identificadoresActuales
             generarEntradas("function")
-            tablaActual[nombreSubprograma].update({"atributo":"function"})
+            tablaActual[nombreSubprograma].update({"atributo":"function","nivel":nivel})
             # Semantico: Cambio de contexto: de Program a Function
             tablaActual = tablaActual.new_child()
             # Sintactico
             ret1 = parametrosFormales()
+            # MEPA: Modificacion de desplazamiento correspondiente para los parametrosReales
+            iesimoParametro=1
+            for parametro in tablaActual:
+                parametro["direccion"]=-(int(parametro["direccion"]) + 3 - iesimoParametro)
+                iesimoParametro += 1
             # Semantico: Los parametros deben figurar como variables en el contexto del procedure que es el nuevo actual
             # guardamos los parametros en la Tabla de Simbols del padre
             tablaActual.parent[nombreSubprograma].update(
@@ -851,11 +978,24 @@ def declaracionPyf():
             ret = tipoVariables()
             #Semantico: definimos la variable con el nombre del subprograma como "retorno"
             tablaActual[nombreSubprograma]["atributo"]="retorno"
+            # MEPA: Modifico la direccion de la variable de retorno de la funcion a la correspodiente -(n + 3)
+            tablaActual[nombreSubprograma]["direccion"]= - (len(tablaActual.parent[nombreSubprograma]["parametros"]) + 3)
             #Semantico: asignacion de tipo y atributo de la funcion en la tabla de simbolos
             tipoFuncion = tablaActual[nombreSubprograma]["tipo"]
             tablaActual.parent[nombreSubprograma].update({"atributo":"function"})
             tablaActual.parent[nombreSubprograma].update({"tipo":tipoFuncion})
             match("punto_coma")
+            #MEPA: Se modifica el contador de variables
+            dirVariable = 1            #MEPA: Se retorna al nivel superior
+            codigo += "RTPR "+ str(nivel)+" "+str(len(tablaActual.parent[nombreSubprograma]["parametros"]))+ "\n"
+            # MEPA: Asignacion de etiqueta
+            etiqueta += etiqueta + 1
+            tablaActual.parent[nombreSubprograma].update(
+                {"etiqueta": 'L'+str(etiqueta)})
+            #MEPA: Entra al procedimiento de nivel 'K'
+            nivel += 1
+            codigo += tablaActual.parent[nombreSubprograma]["etiqueta"] + " ENPR "+str(nivel)+"\n"
+            #SINTACTICO - SEMANTICO
             ret1 = declaracionVariableOpt()
             ret2 = declaracionPyfRep()
             # ret3 = sentenciaCompuesta()
@@ -868,6 +1008,11 @@ def declaracionPyf():
                 reportar("Error: existen errores semanticos en la definicion del FUNCTION " +
                          str(nombreSubprograma), preanalisis, "declaracionPyf", "Semantico")
                 #ret = "Error"
+            # MEPA: Libero memoria
+            codigo += "LMEM "+ str(len(tablaActual)-len(tablaActual.parent[nombreSubprograma]["parametros"]))+ "\n"
+            #MEPA: Se retorna al nivel superior
+            nivel -= 1
+            codigo += "RTPR "+ str(nivel)+" "+str(len(tablaActual.parent[nombreSubprograma]["parametros"]))+ "\n"
             # Semantico: Cambio de contexto: desapilo la tabla de function
             identificadoresActuales = []
             tablaActual = tablaActual.parent
@@ -879,6 +1024,7 @@ def declaracionPyf():
                  preanalisis, "declaracionPyf")
     if verbose:
         print("<--declaracionPyf")
+
     return ret
 
 
@@ -1162,24 +1308,27 @@ def main():
 def procesar():
     global preanalisis
     global error
-
+    global codigo
     # Comenzamos a procesar los tokens encontrados sabiendo que un programa Pascal comienza con la sentencia program
     preanalisis = analizadorLexico.siguientePreanalisis()
     #if(verbose):
     #    print("-------->TRAZA DE EJECUCION DE LA GRAMATICA:")
     programa()
     # Salida de Tokens
-    # if(args.verbose_mode):
+    # if(args.verbose_mode):atom://teletype/portal/0155257b-a858-44b3-9e90-e45c9bfb27c7
     #        print tokens
 
     if(error):
         error = list(set(error))
         print '\033[91m' + "ERRORES DETECTADOS: " + repr(len(error))
         print '\033[93m' + "[Nro de Linea] Descripcion del error" + '\033[0m'
-        # Ordenamos los errores por linea donde aparecen
+        # Ordenamos los errores por linea donde aparecen y los imprimimos
         error.sort()
         for e in error:
             print e
+        #Salida temporal: Codigo MEPA
+        print codigo
+        # Terminar la ejecucion
         os.system('kill %d' % os.getpid())
     else:
         print "Analisis finalizado. No hay errores detectados"
@@ -1188,8 +1337,12 @@ def procesar():
 
 
 def generarEntradas(tipo):
-    global identificadoresActuales
-    global tablaActual
+    #Variables globales de la tabla de simbolos actual
+    global identificadoresActuales,tablaActual
+    #Variables gloables de MEPA
+    global codigo,dirVariable,nivel
+    # MEPA: reservamos el espacio para la variable
+    codigo += "RMEM "+str(len(identificadoresActuales))+"\n"
     # Añadir cada identificador a la tabla con el tipo asociado
     for identificador in identificadoresActuales:
         # si el identificador existe: añadimos el error
@@ -1199,7 +1352,9 @@ def generarEntradas(tipo):
                      identificador, "generarVariables", "Semantico")
         # El identificador no existe
         except KeyError:
-            tablaActual[identificador] = {"tipo": tipo , "atributo": "variable"}
+            # Appendamos en la tabla el identificador
+            tablaActual[identificador] = {"tipo": tipo , "atributo": "variable", "direccion": dirVariable, "nivel":nivel}
+            dirVariable += 1
             if(verbose):
                 print('\033[92m' + "[SEMANTICO] Nueva entrada: " +
                       repr(identificador) + " : " + repr(tipo) + '\033[0m')
@@ -1210,7 +1365,7 @@ def generarEntradas(tipo):
 if __name__ == '__main__':
     # Definicion de argumentos y pasaje de parametros.
     parser = argparse.ArgumentParser(
-        description="Analizador Sintactico de Pascal Reducido")
+        description="Analizador Sintactico de Pascal Reducido. \n Para propositos educativos. See LICENSE. \n Bonet Peinado - de la Fuente \n UNCo - FAI 2018 \n USO: analizador ArchivoPascal.pas \n Mas opciones:")
     parser.add_argument(
         "archivo", help="Ruta relativa del fichero a analizar sintacticamente.", type=str)
     parser.add_argument("-verbose_mode", "-v",
@@ -1219,8 +1374,9 @@ if __name__ == '__main__':
         "-standalone", "-s", help="Flag para funcionamiento por separado del aplicativo.", action='store_true')
     args = parser.parse_args()
     verbose = args.verbose_mode
-
+    # Si funciona como un analizador sintáctico-semántico independiente
     if(args.standalone):
         main()
     else:
+        # Si funciona como parte de un compilador de una pasada
         procesar()
