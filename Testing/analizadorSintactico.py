@@ -48,13 +48,14 @@ identificadoresActuales = list()
 global codigo
 codigo = ""
 global dirVariable
-dirVariable = 0
+dirVariable = 1
 global nivel
-nivel = 0
+nivel = 1
 global etiqueta
 etiqueta = 0
-global definicionVariables
+global definicionVariables,esParametro
 definicionVariables=0
+esParametro = False
 # Definicion de casos posibles
 
 
@@ -120,7 +121,7 @@ def declaracionVariables():
     if(preanalisis == 'var'):
         match('var')
         ret = listaVariables()
-        if definicionVariables :
+        if definicionVariables and not esParametro:
             codigo += "RMEM "+str(definicionVariables)+"\n"
         definicionVariables=0
     else:
@@ -411,7 +412,9 @@ def asignacionollamada(id):
     #             preanalisis, "asignacionollamada")
 
     else:
+        print "LLEGUEEEEEEEEEEEEE"
         try:
+            codigo += "APVL "+str(variableNivel)+","+str(variableAsignacion)+"\n"
             parametros = None
             idLlamada = None
             if (tablaActual[id]["atributo"] == "retorno"):
@@ -925,7 +928,7 @@ def declaracionPyf():
     global tablaActual
     global identificadoresActuales
     # MEPA: variables para la generación de código intermedio
-    global codigo,nivel,dirVariable,etiqueta
+    global codigo,nivel,dirVariable,etiqueta,esParametro
 
     ret = "VOID"
     nombreSubprograma = ""
@@ -945,8 +948,11 @@ def declaracionPyf():
             # Semantico: Cambio de ambito: de Program a Procedure -lectura de parametros-
             # generamos un contexto para guardar los parametros
             tablaActual = tablaActual.new_child()
+            # MEPA: definicion de parametros no reserva memoria
+            esParametro = True
             # Sintactico
             ret = parametrosFormales()
+            esParametro = False
             # Semantico: Los parametros deben figurar como variables en el contexto del procedure que es el nuevo actual
             # guardamos los parametros en la Tabla de Simbols del padre
             tablaActual.parent[nombreSubprograma].update(
@@ -954,8 +960,9 @@ def declaracionPyf():
             # MEPA: Modificacion de desplazamiento correspondiente para los parametrosReales
             iesimoParametro=1
             parametros = tablaActual.parent[nombreSubprograma]["parametros"]
+            n = len(parametros)
             for parametro in parametros:
-                tablaActual[parametro]["direccion"]=-(int(tablaActual[parametro]["direccion"]) + 3 - iesimoParametro)
+                tablaActual[parametro]["direccion"]=-(n + 3 - iesimoParametro)
                 iesimoParametro += 1
 
             #MEPA: Se modifica el contador de variables
@@ -985,7 +992,7 @@ def declaracionPyf():
             codigo += "LMEM "+ str(len(tablaActual)-len(tablaActual.parent[nombreSubprograma]["parametros"]))+ "\n"
             #MEPA: Se retorna al nivel superior
             nivel-=1
-            codigo += "RTPR "+ str(nivel)+" "+str(len(tablaActual.parent[nombreSubprograma]["parametros"]))+ "\n"
+            codigo += "RTPR "+ str(nivel)+","+str(len(tablaActual.parent[nombreSubprograma]["parametros"]))+ "\n"
             # Semantico: Cambio de contexto: desapilo la tabla procedure
             identificadoresActuales = []
             tablaActual = tablaActual.parent
@@ -1006,12 +1013,17 @@ def declaracionPyf():
             tablaActual[nombreSubprograma].update({"atributo":"function","nivel":nivel})
             # Semantico: Cambio de contexto: de Program a Function
             tablaActual = tablaActual.new_child()
+            # MEPA: definicion de parametros no reserva memoria
+            esParametro = True
             # Sintactico
             ret1 = parametrosFormales()
+            esParametro = False
             # MEPA: Modificacion de desplazamiento correspondiente para los parametrosReales
             iesimoParametro=1
-            for parametro in tablaActual:
-                parametro["direccion"]=-(int(parametro["direccion"]) + 3 - iesimoParametro)
+            parametros = tablaActual.parent[nombreSubprograma]["parametros"]
+            n = len(parametros)
+            for parametro in parametros:
+                tablaActual[parametro]["direccion"]=-(n + 3 - iesimoParametro)
                 iesimoParametro += 1
             # Semantico: Los parametros deben figurar como variables en el contexto del procedure que es el nuevo actual
             # guardamos los parametros en la Tabla de Simbols del padre
@@ -1033,7 +1045,7 @@ def declaracionPyf():
             match("punto_coma")
             #MEPA: Se modifica el contador de variables
             dirVariable = 1            #MEPA: Se retorna al nivel superior
-            codigo += "RTPR "+ str(nivel)+" "+str(len(tablaActual.parent[nombreSubprograma]["parametros"]))+ "\n"
+            codigo += "RTPR "+ str(nivel)+","+str(len(tablaActual.parent[nombreSubprograma]["parametros"]))+ "\n"
             # MEPA: Asignacion de etiqueta
             etiqueta += etiqueta + 1
             tablaActual.parent[nombreSubprograma].update(
@@ -1229,6 +1241,8 @@ def llamada(parametros=None,id = None):
     elif verbose:
         print('\033[93m' + "> Lambda") + '\033[0m'
     else:
+        # MEPA: acceso a variable
+        codigo += "APVL "+str(id["nivel"])+","+str(id["direccion"])+"\n"
         if parametros:
             reportar("Error: Cantidad de parametros incorrecto. Se esperaban " +
                  str(len(parametros))+" parametros más ", preanalisis, "llamada", "Semantico")
