@@ -48,9 +48,9 @@ identificadoresActuales = list()
 global codigo
 codigo = ""
 global dirVariable
-dirVariable = 1
+dirVariable = 0
 global nivel
-nivel = 1
+nivel = 0
 global etiqueta
 etiqueta = 0
 global definicionVariables,esParametro
@@ -114,7 +114,7 @@ def identificador():
 
 
 def declaracionVariables():
-    global codigo,definicionVariables
+    global codigo,definicionVariables,dirVariable
     ret = "VOID"
     if verbose:
         print("-->declaracionVariables")
@@ -123,7 +123,11 @@ def declaracionVariables():
         ret = listaVariables()
         if definicionVariables and not esParametro:
             codigo += "RMEM "+str(definicionVariables)+"\n"
+        if esParametro:
+            # MEPA: parametros requieren direccion negativa
+            dirVariable -= definicionVariables
         definicionVariables=0
+        print tablaActual
     else:
         reportar("Error de Sintaxis: se esperaba VAR",
                  preanalisis, "declaracionVariables")
@@ -620,7 +624,7 @@ def programa():
     global tablaSimbolos
     global tablaActual
     global identificadoresActuales
-    global codigo,etiqueta
+    global codigo,etiqueta,dirVariable
     if verbose:
         print("-->programa")
     if preanalisis == "program":
@@ -633,8 +637,12 @@ def programa():
         codigo += "INPP \n"
         # Sintactico
         identificador()
+        id = identificadoresActuales[0]
         # Semantico: Generamos la entrada para el nombre de Program
         generarEntradas("program")
+        # MEPA: programa principal no requiere direccion relativa
+        dirVariable -= 1
+        tablaActual[id]["atributo"]="program"
         # Sintactico
         match("punto_coma")
         declaracionVariableOpt()
@@ -652,6 +660,10 @@ def programa():
         #ret2 = sentenciaCompuesta()
         match("end")
         match("punto")
+        # MEPA: Liberar memoria
+        codigo += "LMEM "+str(len({k: v for k, v in tablaActual.map.iteritems() if v["atributo"] == "variable"}))+"\n"
+        #MEPA: Finalizacion del programa
+        codigo+= "PARA \n"
         #if not(ret3 == "VOID" and ret1 == "VOID" and ret2 == "VOID"):
         #    reportar("Existen multiples errores semanticos dentro del programa. ",
         #             preanalisis, "programa", "Semantico")
@@ -663,8 +675,8 @@ def programa():
         print("<--programa")
         print repr(tablaSimbolos)
         return ret
-    #MEPA: Finalizacion del programa
-    codigo+= "PARA \n"
+
+
 
 
 def declaracionVariableOpt():
@@ -944,7 +956,11 @@ def declaracionPyf():
             nombreSubprograma = identificadoresActuales[0]
             # generamos la entrada en la Tabla de Simbolos para el subprograma
             generarEntradas("void")
+            # MEPA: nivel del procedimiento
+            nivel += 1
             tablaActual[nombreSubprograma].update({"atributo":"procedure","nivel":nivel})
+            # MEPA: subprograma no requiere direccion relativa
+            dirVariable -= 1
             # Semantico: Cambio de ambito: de Program a Procedure -lectura de parametros-
             # generamos un contexto para guardar los parametros
             tablaActual = tablaActual.new_child()
@@ -966,13 +982,12 @@ def declaracionPyf():
                 iesimoParametro += 1
 
             #MEPA: Se modifica el contador de variables
-            dirVariable = 1
+            dirVariable = 0
             # MEPA: Asignacion de etiqueta
-            etiqueta += etiqueta + 1
+            etiqueta += 1
             tablaActual.parent[nombreSubprograma].update(
                 {"etiqueta": 'L'+str(etiqueta)})
             #MEPA: Entra al procedimiento de nivel 'K'
-            nivel += 1
             codigo += tablaActual.parent[nombreSubprograma]["etiqueta"] + " ENPR "+str(nivel)+"\n"
             # Sintactico
             match("punto_coma")
@@ -989,7 +1004,7 @@ def declaracionPyf():
                          str(nombreSubprograma), preanalisis, "declaracionPyf", "Semantico")
                 #ret = "Error"
             # MEPA: Liberar memoria de variables locales
-            codigo += "LMEM "+ str(len(tablaActual)-len(tablaActual.parent[nombreSubprograma]["parametros"]))+ "\n"
+            codigo += "LMEM "+ str(len({k: v for k, v in tablaActual.map.iteritems() if v["atributo"] == "variable"})-len(tablaActual.parent[nombreSubprograma]["parametros"]))+ "\n"
             #MEPA: Se retorna al nivel superior
             nivel-=1
             codigo += "RTPR "+ str(nivel)+","+str(len(tablaActual.parent[nombreSubprograma]["parametros"]))+ "\n"
@@ -1010,7 +1025,11 @@ def declaracionPyf():
             nombreSubprograma = identificadoresActuales[0]
             variableRetorno = identificadoresActuales
             generarEntradas("function")
+            # MEPA: nivel del procedimiento
+            nivel += 1
             tablaActual[nombreSubprograma].update({"atributo":"function","nivel":nivel})
+            # MEPA: subprograma no requiere direccion relativa
+            dirVariable -= 1
             # Semantico: Cambio de contexto: de Program a Function
             tablaActual = tablaActual.new_child()
             # MEPA: definicion de parametros no reserva memoria
@@ -1044,20 +1063,21 @@ def declaracionPyf():
             tablaActual.parent[nombreSubprograma].update({"tipo":tipoFuncion})
             match("punto_coma")
             #MEPA: Se modifica el contador de variables
-            dirVariable = 1            #MEPA: Se retorna al nivel superior
+            dirVariable = 0            #MEPA: Se retorna al nivel superior
             codigo += "RTPR "+ str(nivel)+","+str(len(tablaActual.parent[nombreSubprograma]["parametros"]))+ "\n"
             # MEPA: Asignacion de etiqueta
-            etiqueta += etiqueta + 1
+            etiqueta += 1
             tablaActual.parent[nombreSubprograma].update(
                 {"etiqueta": 'L'+str(etiqueta)})
             #MEPA: Entra al procedimiento de nivel 'K'
-            nivel += 1
             codigo += tablaActual.parent[nombreSubprograma]["etiqueta"] + " ENPR "+str(nivel)+"\n"
             #SINTACTICO - SEMANTICO
             ret1 = declaracionVariableOpt()
             ret2 = declaracionPyfRep()
             # ret3 = sentenciaCompuesta()
             match("begin")
+            # MEPA: cambia de nivel
+            nivel += 1
             #ret3 = programaRepSentencia()
             ret3 = compuesta()
             match("end")
@@ -1067,7 +1087,7 @@ def declaracionPyf():
                          str(nombreSubprograma), preanalisis, "declaracionPyf", "Semantico")
                 #ret = "Error"
             # MEPA: Libero memoria
-            codigo += "LMEM "+ str(len(tablaActual)-len(tablaActual.parent[nombreSubprograma]["parametros"]))+ "\n"
+            codigo += "LMEM "+ str(len({k: v for k, v in tablaActual.map.iteritems() if v["atributo"] == "variable"})-len(tablaActual.parent[nombreSubprograma]["parametros"]))+ "\n"
             #MEPA: Se retorna al nivel superior
             nivel -= 1
             codigo += "RTPR "+ str(nivel)+" "+str(len(tablaActual.parent[nombreSubprograma]["parametros"]))+ "\n"
