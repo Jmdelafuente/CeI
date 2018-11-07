@@ -248,7 +248,7 @@ def sentenciaCompuesta():
         match("begin")
         ret = compuesta()
         match("end")
-        match("punto_coma")
+        # match("punto_coma")
     else:
         reportar("Error de Sintaxis: se esperaba BEGIN",
                  preanalisis, "sentenciaCompuesta")
@@ -315,6 +315,7 @@ def sentencia():
     elif(preanalisis == 'while'):
         ret = mientras()
     elif(preanalisis == 'write'):
+        print "----------------------------------------------------------IMPRIMIR"
         match("write")
         match("parentesis_a")
         expresionGeneral()
@@ -416,7 +417,6 @@ def asignacionollamada(id):
     #             preanalisis, "asignacionollamada")
 
     else:
-        print "LLEGUEEEEEEEEEEEEE"
         try:
             codigo += "APVL "+str(variableNivel)+","+str(variableAsignacion)+"\n"
             parametros = None
@@ -559,6 +559,7 @@ def factor():
                      " no se encuentra definido. ", preanalisis, "termino1", "Semantico")
             ret = llamada()
     elif (preanalisis == "write"):
+        print "----------------------------------------------------------IMPRIMIR"
         match("write")
         match("parentesis_a")
         expresionGeneral()
@@ -881,15 +882,19 @@ def alternativa(etiAnterior):
         #Mepa: No tiene ELSE
         codigo +='L'+ str(etiqueta)+' NADA \n'
     elif (preanalisis == "else"):
+        #ret = sentencia()
         match("else")
         #Mepa: Desvia siempre
         etiqueta += 1
         codigo += 'DSVS L' + str(etiqueta) + '\n'
         #Mepa: Tiene ELSE
         codigo += 'L'+ str(etiAnterior)+' NADA \n'
-        ret = compuesta()
-        #Mepa: No tiene ELSE
-        codigo += 'L' + str(etiqueta)+' NADA \n'
+        alternativa1()
+        # if (preanalisis)
+        # ret = compuesta()
+        # #Mepa: Termina el ELSE
+        # codigo += 'L' + str(etiqueta)+' NADA \n'
+        print "*******************<----Termine ELSE"
     else:
         reportar("Error de sintaxis: se esperaba ; o ELSE",
                  preanalisis, "alternativa")
@@ -897,6 +902,29 @@ def alternativa(etiAnterior):
         print("<--alternativa")
     return ret
 
+def alternativa1():
+    global etiqueta,codigo
+    ret = "VOID"
+    if verbose:
+        print("-->alternativa1")
+    if (preanalisis == "begin"):
+    #    etiqueta += 1
+    #    codigo += 'DSVS L' + str(etiqueta) + '\n'
+        ret = sentenciaCompuesta()
+        #Mepa: Tiene ELSE
+        codigo += 'L'+ str(etiqueta)+' NADA \n'
+    elif preanalisis in {'write', 'while', 'read', 'if', 'identificador'}:
+    #    etiqueta += 1
+    #    codigo += 'DSVS L' + str(etiqueta) + '\n'
+        ret = sentencia()
+        #Mepa: Termina ELSE
+        codigo += 'L'+ str(etiqueta)+' NADA \n'
+    else:
+        reportar("Error de sintaxis: se esperaba BEGIN, READ, WRITE, IF, WHILE o Identificador Valido",
+                 preanalisis, "alternativa1")
+    if verbose:
+        print("<--alternativa1")
+    return ret
 
 def mientras():
     global codigo
@@ -1006,8 +1034,9 @@ def declaracionPyf():
             # MEPA: Liberar memoria de variables locales
             codigo += "LMEM "+ str(len({k: v for k, v in tablaActual.map.iteritems() if v["atributo"] == "variable"})-len(tablaActual.parent[nombreSubprograma]["parametros"]))+ "\n"
             #MEPA: Se retorna al nivel superior
-            nivel-=1
+
             codigo += "RTPR "+ str(nivel)+","+str(len(tablaActual.parent[nombreSubprograma]["parametros"]))+ "\n"
+            nivel-=1
             # Semantico: Cambio de contexto: desapilo la tabla procedure
             identificadoresActuales = []
             tablaActual = tablaActual.parent
@@ -1076,8 +1105,8 @@ def declaracionPyf():
             ret2 = declaracionPyfRep()
             # ret3 = sentenciaCompuesta()
             match("begin")
-            # MEPA: cambia de nivel
-            nivel += 1
+        #    # MEPA: cambia de nivel
+        #    nivel += 1
             #ret3 = programaRepSentencia()
             ret3 = compuesta()
             match("end")
@@ -1089,8 +1118,9 @@ def declaracionPyf():
             # MEPA: Libero memoria
             codigo += "LMEM "+ str(len({k: v for k, v in tablaActual.map.iteritems() if v["atributo"] == "variable"})-len(tablaActual.parent[nombreSubprograma]["parametros"]))+ "\n"
             #MEPA: Se retorna al nivel superior
-            nivel -= 1
+
             codigo += "RTPR "+ str(nivel)+" "+str(len(tablaActual.parent[nombreSubprograma]["parametros"]))+ "\n"
+            nivel -= 1
             # Semantico: Cambio de contexto: desapilo la tabla de function
             identificadoresActuales = []
             tablaActual = tablaActual.parent
@@ -1221,12 +1251,14 @@ def parametrosReales(parametros):
 
 def llamada(parametros=None,id = None):
     global codigo
+    entro = False
     #Semantico: tipo del identificador
     ret = "VOID" if id == None else id["tipo"].upper()
     if verbose:
         print("-->llamada")
     #print repr(parametros) + " en linea " + str(analizadorLexico.nroLinea) + " con preanalisis " + repr(preanalisis)
     if preanalisis == "parentesis_a":
+        entro = True
         try:
             # MEPA: si es una funcion reserva la posicion para variableRetorno
             if id["atributo"]=="function": #Si es una funcion
@@ -1258,16 +1290,18 @@ def llamada(parametros=None,id = None):
         # MEPA: codigo de la llamada a la funcion
         etiqueta = id["etiqueta"]
         codigo += "LLPR "+etiqueta+ "\n"
-    elif verbose:
-        print('\033[93m' + "> Lambda") + '\033[0m'
     else:
+        entro = True
         # MEPA: acceso a variable
         codigo += "APVL "+str(id["nivel"])+","+str(id["direccion"])+"\n"
         if parametros:
             reportar("Error: Cantidad de parametros incorrecto. Se esperaban " +
                  str(len(parametros))+" parametros más ", preanalisis, "llamada", "Semantico")
             ret = "ERROR"
+
     if verbose:
+        if not entro:
+            print('\033[93m' + "> Lambda") + '\033[0m'
         print("<--llamada")
     return ret
 
@@ -1304,6 +1338,8 @@ def reportar(tipoError, simbolo, metodo, tipoReporte="Sintactico"):
                 repr(analizadorLexico.lexemaAnterior) + "\n"
     elif tipoReporte == "Semantico":
         err = "[" + str(analizadorLexico.nroLinea) + "] " + tipoError + "\n"
+    # if(verbose):
+    #     print '\033[91m' + "ERROR DETECTADO: " + repr(err)
     if(args.standalone):
         print err
         exit(0)

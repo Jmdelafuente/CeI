@@ -11,7 +11,7 @@ procedure p (n:integer; g:integer);
         k:=h;
         p(n-2,g)
       end;
-      write(n)
+    write(n)
     end;
 begin
   k:=0;
