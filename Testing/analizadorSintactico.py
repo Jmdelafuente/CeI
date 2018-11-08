@@ -1294,12 +1294,12 @@ def llamada(parametros=None,id = None):
     else:
         entro = True
         # MEPA: acceso a variable
-        codigo += "APVL "+str(id["nivel"])+","+str(id["direccion"])+"\n"
-        if parametros:
-            reportar("Error: Cantidad de parametros incorrecto. Se esperaban " +
-                 str(len(parametros))+" parametros más ", preanalisis, "llamada", "Semantico")
-            ret = "ERROR"
-
+        if id:
+            codigo += "APVL "+str(id["nivel"])+","+str(id["direccion"])+"\n"
+            if parametros:
+                reportar("Error: Cantidad de parametros incorrecto. Se esperaban " +
+                    str(len(parametros))+" parametros más ", preanalisis, "llamada", "Semantico")
+                ret = "ERROR"
     if verbose:
         if not entro:
             print('\033[93m' + "> Lambda") + '\033[0m'
