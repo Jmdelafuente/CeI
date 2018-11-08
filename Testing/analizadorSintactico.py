@@ -1066,6 +1066,11 @@ def declaracionPyf():
             # Sintactico
             ret1 = parametrosFormales()
             esParametro = False
+            # Semantico: Los parametros deben figurar como variables en el contexto del procedure que es el nuevo actual
+            # guardamos los parametros en la Tabla de Simbols del padre
+            tablaActual.parent[nombreSubprograma].update(
+                {"parametros": tablaActual.map.copy()})
+            match("dos_puntos")
             # MEPA: Modificacion de desplazamiento correspondiente para los parametrosReales
             iesimoParametro=1
             parametros = tablaActual.parent[nombreSubprograma]["parametros"]
@@ -1073,11 +1078,6 @@ def declaracionPyf():
             for parametro in parametros:
                 tablaActual[parametro]["direccion"]=-(n + 3 - iesimoParametro)
                 iesimoParametro += 1
-            # Semantico: Los parametros deben figurar como variables en el contexto del procedure que es el nuevo actual
-            # guardamos los parametros en la Tabla de Simbols del padre
-            tablaActual.parent[nombreSubprograma].update(
-                {"parametros": tablaActual.map.copy()})
-            match("dos_puntos")
             # Semantico: Definimos la variable de retorno para ser insertada con su tipo de Variable
             identificadoresActuales = variableRetorno
             # Sintactico
