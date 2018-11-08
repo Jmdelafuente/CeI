@@ -127,7 +127,7 @@ def declaracionVariables():
             # MEPA: parametros requieren direccion negativa
             dirVariable -= definicionVariables
         definicionVariables=0
-        print tablaActual
+
     else:
         reportar("Error de Sintaxis: se esperaba VAR",
                  preanalisis, "declaracionVariables")
@@ -315,7 +315,6 @@ def sentencia():
     elif(preanalisis == 'while'):
         ret = mientras()
     elif(preanalisis == 'write'):
-        print "----------------------------------------------------------IMPRIMIR"
         match("write")
         match("parentesis_a")
         expresionGeneral()
@@ -389,9 +388,13 @@ def asignacionollamada(id):
         if (ret != ret2) and ret != "VOID":
             reportar("La asignación no es correcta. El identificador " + repr(id) + " no es del tipo correcto.", id, "sentencia", "Semantico")
         #MEPA: asignamos el valor final a la variable
-        variableAsignacion = tablaActual[id]["direccion"]
-        variableNivel = tablaActual[id]["nivel"]
-        codigo += "ALVL "+str(variableNivel)+","+str(variableAsignacion)+"\n"
+        try:
+            variableAsignacion = tablaActual[id]['direccion']
+            variableNivel = tablaActual[id]['nivel']
+            codigo += "ALVL "+str(variableNivel)+","+str(variableAsignacion)+"\n"
+        except KeyError:
+            reportar("El identificador " + repr(id) + " no esta definido. ",
+                     preanalisis, "generarVariables", "Semantico")
     elif preanalisis == "parentesis_a":
         parametros = None
         idLlamada = None
@@ -417,10 +420,10 @@ def asignacionollamada(id):
     #             preanalisis, "asignacionollamada")
 
     else:
+        parametros = None
+        idLlamada = None
         try:
             codigo += "APVL "+str(variableNivel)+","+str(variableAsignacion)+"\n"
-            parametros = None
-            idLlamada = None
             if (tablaActual[id]["atributo"] == "retorno"):
                 parametros = tablaActual.parent[id]["parametros"].copy()
                 idLlamada = tablaActual.parent[id]
@@ -559,7 +562,6 @@ def factor():
                      " no se encuentra definido. ", preanalisis, "termino1", "Semantico")
             ret = llamada()
     elif (preanalisis == "write"):
-        print "----------------------------------------------------------IMPRIMIR"
         match("write")
         match("parentesis_a")
         expresionGeneral()
@@ -894,7 +896,6 @@ def alternativa(etiAnterior):
         # ret = compuesta()
         # #Mepa: Termina el ELSE
         # codigo += 'L' + str(etiqueta)+' NADA \n'
-        print "*******************<----Termine ELSE"
     else:
         reportar("Error de sintaxis: se esperaba ; o ELSE",
                  preanalisis, "alternativa")
