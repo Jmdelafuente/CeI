@@ -590,11 +590,11 @@ def factor():
         ret = digitos()
     elif preanalisis == "true":
         match("true")
-        codigo += "APCT 1"
+        codigo += "APCT 1 \n"
         ret = "BOOLEAN"
     elif preanalisis == "false":
         match("false")
-        codigo += "APCT 0"
+        codigo += "APCT 0 \n"
         ret = "BOOLEAN"
     elif preanalisis == "parentesis_a":
         match("parentesis_a")
