@@ -891,7 +891,7 @@ def alternativa(etiAnterior):
         codigo += 'DSVS L' + str(etiqueta) + '\n'
         #Mepa: Tiene ELSE
         codigo += 'L'+ str(etiAnterior)+' NADA \n'
-        alternativa1()
+        alternativa1(etiqueta)
         # if (preanalisis)
         # ret = compuesta()
         # #Mepa: Termina el ELSE
@@ -903,7 +903,7 @@ def alternativa(etiAnterior):
         print("<--alternativa")
     return ret
 
-def alternativa1():
+def alternativa1(etiAnterior):
     global etiqueta,codigo
     ret = "VOID"
     if verbose:
@@ -913,13 +913,13 @@ def alternativa1():
     #    codigo += 'DSVS L' + str(etiqueta) + '\n'
         ret = sentenciaCompuesta()
         #Mepa: Tiene ELSE
-        codigo += 'L'+ str(etiqueta)+' NADA \n'
+        codigo += 'L'+ str(etiAnterior)+' NADA \n'
     elif preanalisis in {'write', 'while', 'read', 'if', 'identificador'}:
     #    etiqueta += 1
     #    codigo += 'DSVS L' + str(etiqueta) + '\n'
         ret = sentencia()
         #Mepa: Termina ELSE
-        codigo += 'L'+ str(etiqueta)+' NADA \n'
+        codigo += 'L'+ str(etiAnterior)+' NADA \n'
     else:
         reportar("Error de sintaxis: se esperaba BEGIN, READ, WRITE, IF, WHILE o Identificador Valido",
                  preanalisis, "alternativa1")
@@ -950,7 +950,9 @@ def mientras():
         etiqueta += 1
         etiFalso = etiqueta
         codigo += 'DSVF L' + str(etiqueta) + '\n'
-        ret = sentenciaCompuesta()
+        mientras1()
+        #
+        #ret = sentenciaCompuesta()
         #MEPA: Definicion del salto del mientras
         codigo += 'DSVS L' + str(etiRepetitiva) + '\n'
 
@@ -964,12 +966,31 @@ def mientras():
         print("<--mientras")
     return ret
 
+def mientras1():
+    ret = "VOID"
+    if verbose:
+        print("-->mientras1")
+    caso2 = {"read", "write", "while", "if"}
+    if preanalisis == "begin":
+        #match("begin")
+        #ret = compuesta()
+        ret = sentenciaCompuesta()
+        #match("end")
+    elif ((preanalisis in caso2) or (preanalisis == "identificador")):
+        ret = sentencia()
+    else:
+        reportar("Error de sintaxis: se esperaba WRITE,READ,WHILE,IF,BEGIN o Identificador valido",
+                 preanalisis, "mientras1")
+    if verbose:
+        print("<--mientras1")
+    return ret
+
 
 def declaracionPyf():
     global tablaActual
     global identificadoresActuales
     # MEPA: variables para la generación de código intermedio
-    global codigo,nivel,dirVariable,etiqueta,esParametro
+    global codigo,nivel,dirVariable,etiqueta,esParametro,definicionVariables
 
     ret = "VOID"
     nombreSubprograma = ""
@@ -1094,13 +1115,14 @@ def declaracionPyf():
             match("punto_coma")
             #MEPA: Se modifica el contador de variables
             dirVariable = 0            #MEPA: Se retorna al nivel superior
-            codigo += "RTPR "+ str(nivel)+","+str(len(tablaActual.parent[nombreSubprograma]["parametros"]))+ "\n"
+            # codigo += "RTPR "+ str(nivel)+","+str(len(tablaActual.parent[nombreSubprograma]["parametros"]))+ "\n"
             # MEPA: Asignacion de etiqueta
             etiqueta += 1
             tablaActual.parent[nombreSubprograma].update(
                 {"etiqueta": 'L'+str(etiqueta)})
             #MEPA: Entra al procedimiento de nivel 'K'
             codigo += tablaActual.parent[nombreSubprograma]["etiqueta"] + " ENPR "+str(nivel)+"\n"
+            definicionVariables=0
             #SINTACTICO - SEMANTICO
             ret1 = declaracionVariableOpt()
             ret2 = declaracionPyfRep()
@@ -1286,11 +1308,15 @@ def llamada(parametros=None,id = None):
         except KeyError: #Si no requiere parametros y sin embargo tiene
             reportar("Error: Cantidad de parametros incorrecto. No se esperaban parametros", preanalisis, "llamada", "Semantico")
             ret = "ERROR"
+        except TypeError:
+            reportar("Error: Identificador inexistente.", preanalisis, "llamada", "Semantico")
+            ret = "ERROR"
         parametrosReales(parametros)
         match("parentesis_c")
-        # MEPA: codigo de la llamada a la funcion
-        etiqueta = id["etiqueta"]
-        codigo += "LLPR "+etiqueta+ "\n"
+        if id:
+            # MEPA: codigo de la llamada a la funcion
+            etiqueta = id["etiqueta"]
+            codigo += "LLPR "+etiqueta+ "\n"
     else:
         entro = True
         # MEPA: acceso a variable
@@ -1440,7 +1466,10 @@ def procesar():
     preanalisis = analizadorLexico.siguientePreanalisis()
     #if(verbose):
     #    print("-------->TRAZA DE EJECUCION DE LA GRAMATICA:")
-    programa()
+    try:
+        programa()
+    except:
+        error.append('\033[91m' + "La ejecución finalizó con errores. Para mayor información pruebe el modo verboso")
     # Salida de Tokens
     # if(args.verbose_mode):atom://teletype/portal/0155257b-a858-44b3-9e90-e45c9bfb27c7
     #        print tokens
@@ -1457,8 +1486,11 @@ def procesar():
         os.system('kill %d' % os.getpid())
     else:
         print "Analisis finalizado. No hay errores detectados"
-    #Salida temporal: Codigo MEPA
-    print codigo
+    #Salida Codigo MEPA
+    # print codigo
+    with open(args.archivo + '.mepa', 'w') as file:
+        for t in codigo:
+            file.write(t)
 # DEFINICIONES SEMANTICO
 
 

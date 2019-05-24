@@ -1,0 +1,819 @@
+-->programa
+[93m>Match:program[0m
+[1m>Preanalisis:identificador[0m
+-->identificador
+[93m>Match:identificador[0m
+[1m>Preanalisis:punto_coma[0m
+<--identificador
+[92m[SEMANTICO] Nueva entrada: 'ejemplo' : 'program'[0m
+[93m>Match:punto_coma[0m
+[1m>Preanalisis:var[0m
+-->declaracionVariablesOpt
+-->declaracionVariables
+[93m>Match:var[0m
+[1m>Preanalisis:identificador[0m
+-->listaVariables
+-->listaIdentificador
+-->identificador
+[93m>Match:identificador[0m
+[1m>Preanalisis:dos_puntos[0m
+<--identificador
+-->listaIdentificadorRep
+[93m> Lambda[0m
+<--listaIdentificadorRep
+<--listaIdentificador
+[93m>Match:dos_puntos[0m
+[1m>Preanalisis:integer[0m
+-->tipoVariable
+[92m[SEMANTICO] Nueva entrada: 'k' : 'integer'[0m
+[93m>Match:integer[0m
+[1m>Preanalisis:punto_coma[0m
+<--tipoVariable
+[93m>Match:punto_coma[0m
+[1m>Preanalisis:procedure[0m
+-->listaVariablesRep
+[93m> Lambda[0m
+<--listaVariablesRep
+<--listaVariables
+OrderedDict([('ejemplo', {'nivel': 0, 'atributo': 'program', 'tipo': 'program', 'direccion': 0}), ('k', {'nivel': 0, 'atributo': 'variable', 'tipo': 'integer', 'direccion': 0})])
+<--declaracionVariables
+<--declaracionVariablesOpt
+-->declaracionPyfRep
+-->declaracionPyf
+[93m>Match:procedure[0m
+[1m>Preanalisis:identificador[0m
+-->identificador
+[93m>Match:identificador[0m
+[1m>Preanalisis:parentesis_a[0m
+<--identificador
+[92m[SEMANTICO] Nueva entrada: 'p' : 'void'[0m
+-->parametrosFormales
+[93m>Match:parentesis_a[0m
+[1m>Preanalisis:identificador[0m
+-->listaIdentificador
+-->identificador
+[93m>Match:identificador[0m
+[1m>Preanalisis:dos_puntos[0m
+<--identificador
+-->listaIdentificadorRep
+[93m> Lambda[0m
+<--listaIdentificadorRep
+<--listaIdentificador
+[93m>Match:dos_puntos[0m
+[1m>Preanalisis:integer[0m
+-->tipoVariable
+[92m[SEMANTICO] Nueva entrada: 'n' : 'integer'[0m
+[93m>Match:integer[0m
+[1m>Preanalisis:punto_coma[0m
+<--tipoVariable
+-->parametrosFormalesRep
+[93m>Match:punto_coma[0m
+[1m>Preanalisis:identificador[0m
+-->listaIdentificador
+-->identificador
+[93m>Match:identificador[0m
+[1m>Preanalisis:dos_puntos[0m
+<--identificador
+-->listaIdentificadorRep
+[93m> Lambda[0m
+<--listaIdentificadorRep
+<--listaIdentificador
+[93m>Match:dos_puntos[0m
+[1m>Preanalisis:integer[0m
+-->tipoVariable
+[92m[SEMANTICO] Nueva entrada: 'g' : 'integer'[0m
+[93m>Match:integer[0m
+[1m>Preanalisis:parentesis_c[0m
+<--tipoVariable
+-->parametrosFormalesRep
+[93m> Lambda[0m
+<--parametrosFormalesRep
+<--parametrosFormalesRep
+[93m>Match:parentesis_c[0m
+[1m>Preanalisis:punto_coma[0m
+<--parametrosFormales
+[93m>Match:punto_coma[0m
+[1m>Preanalisis:var[0m
+-->declaracionVariablesOpt
+-->declaracionVariables
+[93m>Match:var[0m
+[1m>Preanalisis:identificador[0m
+-->listaVariables
+-->listaIdentificador
+-->identificador
+[93m>Match:identificador[0m
+[1m>Preanalisis:dos_puntos[0m
+<--identificador
+-->listaIdentificadorRep
+[93m> Lambda[0m
+<--listaIdentificadorRep
+<--listaIdentificador
+[93m>Match:dos_puntos[0m
+[1m>Preanalisis:integer[0m
+-->tipoVariable
+[92m[SEMANTICO] Nueva entrada: 'h' : 'integer'[0m
+[93m>Match:integer[0m
+[1m>Preanalisis:punto_coma[0m
+<--tipoVariable
+[93m>Match:punto_coma[0m
+[1m>Preanalisis:begin[0m
+-->listaVariablesRep
+[93m> Lambda[0m
+<--listaVariablesRep
+<--listaVariables
+OrderedDict([('n', {'nivel': 1, 'atributo': 'variable', 'tipo': 'integer', 'direccion': -4}), ('g', {'nivel': 1, 'atributo': 'variable', 'tipo': 'integer', 'direccion': -3}), ('h', {'nivel': 1, 'atributo': 'variable', 'tipo': 'integer', 'direccion': 0})]) -> OrderedDict([('ejemplo', {'nivel': 0, 'atributo': 'program', 'tipo': 'program', 'direccion': 0}), ('k', {'nivel': 0, 'atributo': 'variable', 'tipo': 'integer', 'direccion': 0}), ('p', {'nivel': 1, 'etiqueta': 'L2', 'atributo': 'procedure', 'tipo': 'void', 'parametros': OrderedDict([('n', {'nivel': 1, 'atributo': 'variable', 'tipo': 'integer', 'direccion': -4}), ('g', {'nivel': 1, 'atributo': 'variable', 'tipo': 'integer', 'direccion': -3})]), 'direccion': 1})])
+<--declaracionVariables
+<--declaracionVariablesOpt
+-->declaracionPyfRep
+[93m> Lambda[0m
+<--declaracionPyfRep
+[93m>Match:begin[0m
+[1m>Preanalisis:if[0m
+-->compuesta
+-->sentencia
+-->ifthen
+[93m>Match:if[0m
+[1m>Preanalisis:identificador[0m
+-->expresionGeneral
+-->no
+[93m> Lambda[0m
+<--no
+-->expresionAritmetica
+-->termino
+-->factor
+-->identificador
+[93m>Match:identificador[0m
+[1m>Preanalisis:operador_relacional[0m
+<--identificador
+-->llamada
+[93m> Lambda[0m
+<--llamada
+<--factor
+-->termino1
+[93m> Lambda[0m
+<--termino1
+<--termino
+-->expresionAritmetica1
+[93m> Lambda[0m
+<--expresionAritmetica1
+<--expresionAritmetica
+-->expresionRelacional
+-->operadorRelacional
+[93m>Match:operador_relacional[0m
+[1m>Preanalisis:numero[0m
+<--operadorRelacional
+-->expresionAritmetica
+-->termino
+-->factor
+-->digitos
+[93m>Match:numero[0m
+[1m>Preanalisis:then[0m
+<--digitos
+<--factor
+-->termino1
+[93m> Lambda[0m
+<--termino1
+<--termino
+-->expresionAritmetica1
+[93m> Lambda[0m
+<--expresionAritmetica1
+<--expresionAritmetica
+<--expresionRelacional
+-->compararAnd
+[93m> Lambda[0m
+<--compararAnd
+-->expresionGeneral1
+[93m> Lambda[0m
+<--expresionGeneral1
+<--expresionGeneral
+[93m>Match:then[0m
+[1m>Preanalisis:identificador[0m
+-->ifthen1
+-->sentencia
+-->identificador
+[93m>Match:identificador[0m
+[1m>Preanalisis:asignacion[0m
+<--identificador
+-->asignacionollamada
+[93m>Match:asignacion[0m
+[1m>Preanalisis:identificador[0m
+-->expresionGeneral
+-->no
+[93m> Lambda[0m
+<--no
+-->expresionAritmetica
+-->termino
+-->factor
+-->identificador
+[93m>Match:identificador[0m
+[1m>Preanalisis:operador_aritmetico[0m
+<--identificador
+-->llamada
+[93m> Lambda[0m
+<--llamada
+<--factor
+-->termino1
+[93m> Lambda[0m
+<--termino1
+<--termino
+-->expresionAritmetica1
+[93m>Match:operador_aritmetico[0m
+[1m>Preanalisis:identificador[0m
+-->termino
+-->factor
+-->identificador
+[93m>Match:identificador[0m
+[1m>Preanalisis:else[0m
+<--identificador
+-->llamada
+[93m> Lambda[0m
+<--llamada
+<--factor
+-->termino1
+[93m> Lambda[0m
+<--termino1
+<--termino
+-->expresionAritmetica1
+[93m> Lambda[0m
+<--expresionAritmetica1
+<--expresionAritmetica1
+<--expresionAritmetica
+-->expresionRelacional
+[93m> Lambda[0m
+<--expresionRelacional
+-->compararAnd
+[93m> Lambda[0m
+<--compararAnd
+-->expresionGeneral1
+[93m> Lambda[0m
+<--expresionGeneral1
+<--expresionGeneral
+<--asignacionollamada
+<--sentencia
+-->alternativa
+[93m>Match:else[0m
+[1m>Preanalisis:begin[0m
+-->compuesta
+-->sentenciaCompuesta
+[93m>Match:begin[0m
+[1m>Preanalisis:identificador[0m
+-->compuesta
+-->sentencia
+-->identificador
+[93m>Match:identificador[0m
+[1m>Preanalisis:asignacion[0m
+<--identificador
+-->asignacionollamada
+[93m>Match:asignacion[0m
+[1m>Preanalisis:identificador[0m
+-->expresionGeneral
+-->no
+[93m> Lambda[0m
+<--no
+-->expresionAritmetica
+-->termino
+-->factor
+-->identificador
+[93m>Match:identificador[0m
+[1m>Preanalisis:punto_coma[0m
+<--identificador
+-->llamada
+[93m> Lambda[0m
+<--llamada
+<--factor
+-->termino1
+[93m> Lambda[0m
+<--termino1
+<--termino
+-->expresionAritmetica1
+[93m> Lambda[0m
+<--expresionAritmetica1
+<--expresionAritmetica
+-->expresionRelacional
+[93m> Lambda[0m
+<--expresionRelacional
+-->compararAnd
+[93m> Lambda[0m
+<--compararAnd
+-->expresionGeneral1
+[93m> Lambda[0m
+<--expresionGeneral1
+<--expresionGeneral
+<--asignacionollamada
+<--sentencia
+-->sentenciaOptativa
+[93m>Match:punto_coma[0m
+[1m>Preanalisis:identificador[0m
+-->compuesta
+-->sentencia
+-->identificador
+[93m>Match:identificador[0m
+[1m>Preanalisis:parentesis_a[0m
+<--identificador
+-->asignacionollamada
+-->llamada
+[93m>Match:parentesis_a[0m
+[1m>Preanalisis:identificador[0m
+-->expresionGeneral
+-->no
+[93m> Lambda[0m
+<--no
+-->expresionAritmetica
+-->termino
+-->factor
+-->identificador
+[93m>Match:identificador[0m
+[1m>Preanalisis:operador_aritmetico[0m
+<--identificador
+-->llamada
+[93m> Lambda[0m
+<--llamada
+<--factor
+-->termino1
+[93m> Lambda[0m
+<--termino1
+<--termino
+-->expresionAritmetica1
+[93m>Match:operador_aritmetico[0m
+[1m>Preanalisis:numero[0m
+-->termino
+-->factor
+-->digitos
+[93m>Match:numero[0m
+[1m>Preanalisis:coma[0m
+<--digitos
+<--factor
+-->termino1
+[93m> Lambda[0m
+<--termino1
+<--termino
+-->expresionAritmetica1
+[93m> Lambda[0m
+<--expresionAritmetica1
+<--expresionAritmetica1
+<--expresionAritmetica
+-->expresionRelacional
+[93m> Lambda[0m
+<--expresionRelacional
+-->compararAnd
+[93m> Lambda[0m
+<--compararAnd
+-->expresionGeneral1
+[93m> Lambda[0m
+<--expresionGeneral1
+<--expresionGeneral
+-->parametrosReales
+[93m>Match:coma[0m
+[1m>Preanalisis:identificador[0m
+-->expresionGeneral
+-->no
+[93m> Lambda[0m
+<--no
+-->expresionAritmetica
+-->termino
+-->factor
+-->identificador
+[93m>Match:identificador[0m
+[1m>Preanalisis:parentesis_c[0m
+<--identificador
+-->llamada
+[93m> Lambda[0m
+<--llamada
+<--factor
+-->termino1
+[93m> Lambda[0m
+<--termino1
+<--termino
+-->expresionAritmetica1
+[93m> Lambda[0m
+<--expresionAritmetica1
+<--expresionAritmetica
+-->expresionRelacional
+[93m> Lambda[0m
+<--expresionRelacional
+-->compararAnd
+[93m> Lambda[0m
+<--compararAnd
+-->expresionGeneral1
+[93m> Lambda[0m
+<--expresionGeneral1
+<--expresionGeneral
+-->parametrosReales
+[93m> Lambda[0m
+<--parametrosReales
+<--parametrosReales
+[93m>Match:parentesis_c[0m
+[1m>Preanalisis:punto_coma[0m
+<--llamada
+<--asignacionollamada
+<--sentencia
+-->sentenciaOptativa
+[93m>Match:punto_coma[0m
+[1m>Preanalisis:identificador[0m
+-->compuesta
+-->sentencia
+-->identificador
+[93m>Match:identificador[0m
+[1m>Preanalisis:asignacion[0m
+<--identificador
+-->asignacionollamada
+[93m>Match:asignacion[0m
+[1m>Preanalisis:identificador[0m
+-->expresionGeneral
+-->no
+[93m> Lambda[0m
+<--no
+-->expresionAritmetica
+-->termino
+-->factor
+-->identificador
+[93m>Match:identificador[0m
+[1m>Preanalisis:punto_coma[0m
+<--identificador
+-->llamada
+[93m> Lambda[0m
+<--llamada
+<--factor
+-->termino1
+[93m> Lambda[0m
+<--termino1
+<--termino
+-->expresionAritmetica1
+[93m> Lambda[0m
+<--expresionAritmetica1
+<--expresionAritmetica
+-->expresionRelacional
+[93m> Lambda[0m
+<--expresionRelacional
+-->compararAnd
+[93m> Lambda[0m
+<--compararAnd
+-->expresionGeneral1
+[93m> Lambda[0m
+<--expresionGeneral1
+<--expresionGeneral
+<--asignacionollamada
+<--sentencia
+-->sentenciaOptativa
+[93m>Match:punto_coma[0m
+[1m>Preanalisis:identificador[0m
+-->compuesta
+-->sentencia
+-->identificador
+[93m>Match:identificador[0m
+[1m>Preanalisis:parentesis_a[0m
+<--identificador
+-->asignacionollamada
+-->llamada
+[93m>Match:parentesis_a[0m
+[1m>Preanalisis:identificador[0m
+-->expresionGeneral
+-->no
+[93m> Lambda[0m
+<--no
+-->expresionAritmetica
+-->termino
+-->factor
+-->identificador
+[93m>Match:identificador[0m
+[1m>Preanalisis:operador_aritmetico[0m
+<--identificador
+-->llamada
+[93m> Lambda[0m
+<--llamada
+<--factor
+-->termino1
+[93m> Lambda[0m
+<--termino1
+<--termino
+-->expresionAritmetica1
+[93m>Match:operador_aritmetico[0m
+[1m>Preanalisis:numero[0m
+-->termino
+-->factor
+-->digitos
+[93m>Match:numero[0m
+[1m>Preanalisis:coma[0m
+<--digitos
+<--factor
+-->termino1
+[93m> Lambda[0m
+<--termino1
+<--termino
+-->expresionAritmetica1
+[93m> Lambda[0m
+<--expresionAritmetica1
+<--expresionAritmetica1
+<--expresionAritmetica
+-->expresionRelacional
+[93m> Lambda[0m
+<--expresionRelacional
+-->compararAnd
+[93m> Lambda[0m
+<--compararAnd
+-->expresionGeneral1
+[93m> Lambda[0m
+<--expresionGeneral1
+<--expresionGeneral
+-->parametrosReales
+[93m>Match:coma[0m
+[1m>Preanalisis:identificador[0m
+-->expresionGeneral
+-->no
+[93m> Lambda[0m
+<--no
+-->expresionAritmetica
+-->termino
+-->factor
+-->identificador
+[93m>Match:identificador[0m
+[1m>Preanalisis:parentesis_c[0m
+<--identificador
+-->llamada
+[93m> Lambda[0m
+<--llamada
+<--factor
+-->termino1
+[93m> Lambda[0m
+<--termino1
+<--termino
+-->expresionAritmetica1
+[93m> Lambda[0m
+<--expresionAritmetica1
+<--expresionAritmetica
+-->expresionRelacional
+[93m> Lambda[0m
+<--expresionRelacional
+-->compararAnd
+[93m> Lambda[0m
+<--compararAnd
+-->expresionGeneral1
+[93m> Lambda[0m
+<--expresionGeneral1
+<--expresionGeneral
+-->parametrosReales
+[93m> Lambda[0m
+<--parametrosReales
+<--parametrosReales
+[93m>Match:parentesis_c[0m
+[1m>Preanalisis:end[0m
+<--llamada
+<--asignacionollamada
+<--sentencia
+-->sentenciaOptativa
+[93m> Lambda[0m
+<--sentenciaOptativa
+<--compuesta
+<--sentenciaOptativa
+<--compuesta
+<--sentenciaOptativa
+<--compuesta
+<--sentenciaOptativa
+<--compuesta
+[93m>Match:end[0m
+[1m>Preanalisis:punto_coma[0m
+[93m>Match:punto_coma[0m
+[1m>Preanalisis:write[0m
+<--sentenciaCompuesta
+-->compuesta
+-->sentencia
+----------------------------------------------------------IMPRIMIR
+[93m>Match:write[0m
+[1m>Preanalisis:parentesis_a[0m
+[93m>Match:parentesis_a[0m
+[1m>Preanalisis:identificador[0m
+-->expresionGeneral
+-->no
+[93m> Lambda[0m
+<--no
+-->expresionAritmetica
+-->termino
+-->factor
+-->identificador
+[93m>Match:identificador[0m
+[1m>Preanalisis:parentesis_c[0m
+<--identificador
+-->llamada
+[93m> Lambda[0m
+<--llamada
+<--factor
+-->termino1
+[93m> Lambda[0m
+<--termino1
+<--termino
+-->expresionAritmetica1
+[93m> Lambda[0m
+<--expresionAritmetica1
+<--expresionAritmetica
+-->expresionRelacional
+[93m> Lambda[0m
+<--expresionRelacional
+-->compararAnd
+[93m> Lambda[0m
+<--compararAnd
+-->expresionGeneral1
+[93m> Lambda[0m
+<--expresionGeneral1
+<--expresionGeneral
+[93m>Match:parentesis_c[0m
+[1m>Preanalisis:end[0m
+<--sentencia
+-->sentenciaOptativa
+[93m> Lambda[0m
+<--sentenciaOptativa
+<--compuesta
+<--compuesta
+*******************<----Termine ELSE
+<--alternativa
+<--ifthen1
+<--ifthen
+<--sentencia
+-->sentenciaOptativa
+[93m> Lambda[0m
+<--sentenciaOptativa
+<--compuesta
+[93m>Match:end[0m
+[1m>Preanalisis:punto_coma[0m
+[93m>Match:punto_coma[0m
+[1m>Preanalisis:begin[0m
+<--declaracionPyf
+-->declaracionPyfRep
+[93m> Lambda[0m
+<--declaracionPyfRep
+<--declaracionPyfRep
+[93m>Match:begin[0m
+[1m>Preanalisis:identificador[0m
+-->compuesta
+-->sentencia
+-->identificador
+[93m>Match:identificador[0m
+[1m>Preanalisis:asignacion[0m
+<--identificador
+-->asignacionollamada
+[93m>Match:asignacion[0m
+[1m>Preanalisis:numero[0m
+-->expresionGeneral
+-->no
+[93m> Lambda[0m
+<--no
+-->expresionAritmetica
+-->termino
+-->factor
+-->digitos
+[93m>Match:numero[0m
+[1m>Preanalisis:punto_coma[0m
+<--digitos
+<--factor
+-->termino1
+[93m> Lambda[0m
+<--termino1
+<--termino
+-->expresionAritmetica1
+[93m> Lambda[0m
+<--expresionAritmetica1
+<--expresionAritmetica
+-->expresionRelacional
+[93m> Lambda[0m
+<--expresionRelacional
+-->compararAnd
+[93m> Lambda[0m
+<--compararAnd
+-->expresionGeneral1
+[93m> Lambda[0m
+<--expresionGeneral1
+<--expresionGeneral
+<--asignacionollamada
+<--sentencia
+-->sentenciaOptativa
+[93m>Match:punto_coma[0m
+[1m>Preanalisis:identificador[0m
+-->compuesta
+-->sentencia
+-->identificador
+[93m>Match:identificador[0m
+[1m>Preanalisis:parentesis_a[0m
+<--identificador
+-->asignacionollamada
+-->llamada
+[93m>Match:parentesis_a[0m
+[1m>Preanalisis:numero[0m
+-->expresionGeneral
+-->no
+[93m> Lambda[0m
+<--no
+-->expresionAritmetica
+-->termino
+-->factor
+-->digitos
+[93m>Match:numero[0m
+[1m>Preanalisis:coma[0m
+<--digitos
+<--factor
+-->termino1
+[93m> Lambda[0m
+<--termino1
+<--termino
+-->expresionAritmetica1
+[93m> Lambda[0m
+<--expresionAritmetica1
+<--expresionAritmetica
+-->expresionRelacional
+[93m> Lambda[0m
+<--expresionRelacional
+-->compararAnd
+[93m> Lambda[0m
+<--compararAnd
+-->expresionGeneral1
+[93m> Lambda[0m
+<--expresionGeneral1
+<--expresionGeneral
+-->parametrosReales
+[93m>Match:coma[0m
+[1m>Preanalisis:identificador[0m
+-->expresionGeneral
+-->no
+[93m> Lambda[0m
+<--no
+-->expresionAritmetica
+-->termino
+-->factor
+-->identificador
+[93m>Match:identificador[0m
+[1m>Preanalisis:parentesis_c[0m
+<--identificador
+-->llamada
+[93m> Lambda[0m
+<--llamada
+<--factor
+-->termino1
+[93m> Lambda[0m
+<--termino1
+<--termino
+-->expresionAritmetica1
+[93m> Lambda[0m
+<--expresionAritmetica1
+<--expresionAritmetica
+-->expresionRelacional
+[93m> Lambda[0m
+<--expresionRelacional
+-->compararAnd
+[93m> Lambda[0m
+<--compararAnd
+-->expresionGeneral1
+[93m> Lambda[0m
+<--expresionGeneral1
+<--expresionGeneral
+-->parametrosReales
+[93m> Lambda[0m
+<--parametrosReales
+<--parametrosReales
+[93m>Match:parentesis_c[0m
+[1m>Preanalisis:end[0m
+<--llamada
+<--asignacionollamada
+<--sentencia
+-->sentenciaOptativa
+[93m> Lambda[0m
+<--sentenciaOptativa
+<--compuesta
+<--sentenciaOptativa
+<--compuesta
+[93m>Match:end[0m
+[1m>Preanalisis:punto[0m
+[93m>Match:punto[0m
+[1m>Preanalisis:EOF[0m
+<--programa
+OrderedDict([('ejemplo', {'nivel': 0, 'atributo': 'program', 'tipo': 'program', 'direccion': 0}), ('k', {'nivel': 0, 'atributo': 'variable', 'tipo': 'integer', 'direccion': 0}), ('p', {'nivel': 1, 'etiqueta': 'L2', 'atributo': 'procedure', 'tipo': 'void', 'parametros': OrderedDict([('n', {'nivel': 1, 'atributo': 'variable', 'tipo': 'integer', 'direccion': -4}), ('g', {'nivel': 1, 'atributo': 'variable', 'tipo': 'integer', 'direccion': -3})]), 'direccion': 1})])
+Analisis finalizado. No hay errores detectados
+INPP 
+RMEM 1
+DSVS L1
+L2 ENPR 1
+RMEM 1
+APCT 2
+CMME 
+DSVF L3
+SUMA 
+ALVL 1,0
+DSVS L4
+L3 NADA 
+ALVL 1,0
+APCT 1
+SUST 
+LLPR L2
+ALVL 0,0
+APCT 2
+SUST 
+LLPR L2
+IMPR 
+L4 NADA 
+LMEM 1
+RTPR 1,2
+L1 NADA 
+APCT 0
+ALVL 0,0
+APCT 3
+LLPR L2
+LMEM 1
+PARA 
+
